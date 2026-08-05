@@ -1,0 +1,142 @@
+# YOLOv8 类子弹头状器件刻印区域检测
+
+## 一、项目背景
+
+在工业质检场景中，需要在金属器件尖端表面识别凹印/凸印编号。该类目标存在以下难点：
+
+- 金属反光强，局部过曝
+- 刻印字符尺寸小、对比度低
+- 部分样本无刻印（负样本）
+- 图像存在倾斜、旋转与尺度变化
+
+## 二、数据集说明
+
+- 来源：实习单位内部采集（受保密协议限制，不公开原始数据）
+- 规模：1813 张工业图像
+- 标注：YOLO 格式，单类别（刻印区域）
+- 划分：训练集 1631 张，验证集 182 张
+- 特殊处理：对无刻印样本引入空标签文件，避免训练阶段漏检惩罚
+
+### 标注预处理逻辑
+
+由于原始标注中标签类别可能为数字或字母， 导致 LabelImg 导出的 YOLO 格式标签中类别 ID ≠ 0。
+
+YOLOv8 在解析标签文件时，遇到非数字或类别 ID ≠ 0 的情况会**静默忽略整行**，既不报错也不告警，极易造成“标注存在但训练无效”的问题。
+
+为此编写 `tools/labelsTOyolo.py`，采用保守策略：
+
+- 不修改原始标签文件
+- 仅读取 `labels/*.txt`
+- 将每行第一个字段（类别 ID）强制重写为 `"0"`
+- 保留剩余四个字段（归一化后的 x, y, w, h）
+- 输出至 `labels_yolo/*.txt`
+
+该策略确保：
+- 检测阶段只关注“刻印区域是否存在”
+- 字符内容交由后续 OCR 阶段独立识别
+- 训练过程无隐性目标丢失
+
+## 三、环境依赖
+
+安装命令：
+
+pip install -r requirements.txt
+
+主要依赖：
+
+- Python >= 3.8
+- PyTorch >= 2.0
+- Ultralytics YOLOv8
+- OpenCV
+- Matplotlib
+
+## 四、快速开始
+
+### 4.1 准备数据配置
+
+复制示例配置，并根据实际路径修改：
+
+cp data.yaml.example data.yaml.local
+
+data.yaml.local 内容（服务器环境）：
+
+train: /root/autodl-tmp/dataset/train.txt
+val: /root/autodl-tmp/dataset/val.txt
+names:
+  0: tip_number_region
+
+### 4.2 训练模型
+
+yolo train model=yolov8n.pt data=data.yaml.local epochs=50 imgsz=640 batch=8 device=0
+
+### 4.3 推理测试
+
+yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/images/val save=True
+
+## 五、实验结果
+
+### 5.1 基线结果（CPU 训练）
+
+- 模型：YOLOv8n
+- 硬件：AMD Ryzen 7 7730U（无独显）
+- mAP50：0.994
+- mAP50-95：0.889
+- 推理速度：127 ms / 张
+
+### 5.2 GPU 重训结果（AutoDL RTX 3080 Ti，50 Epochs）
+
+- Epochs：50
+- mAP50：0.994
+- mAP50-95：0.910
+- Precision：0.986
+- Recall：0.979
+- 推理速度：0.6 ms / 张
+- 训练耗时：~12 min
+
+## 训练曲线
+
+![YOLOv8 训练曲线](assets/results.png)
+
+## 六、项目结构
+
+.
+
+├── assets/                    # 静态资源（提交）
+
+│   └── results.png            # 训练曲线图
+
+├── data.yaml.example          # 数据配置模板（参考用）
+
+├── data.yaml.local            # 本地私有配置（不提交）
+
+├── train.py                   # 训练脚本
+
+├── tools/                     # 工具脚本目录
+
+│   ├── labelsTOyolo.py        # 标签转 YOLO 格式（强制类别 ID=0）
+
+│   └── test_env.py            # 环境测试脚本
+
+├── runs/                      # 训练输出目录（不提交，含 best.pt / results.png 等）
+
+├── yolov8n.pt                 # YOLOv8n 预训练权重（不提交，首次训练自动下载）
+
+└── README.md                  # 项目说明文档
+
+说明：
+- 带（不提交）标记的文件/目录已加入 .gitignore，不会上传至 GitHub
+- 使用者需自行下载预训练权重，并根据 data.yaml.example 创建本地配置
+
+## 七、后续工作
+
+- 优化强反光与小目标场景下的检测稳定性
+- 接入 PaddleOCR / CRNN 完成刻印字符端到端识别
+- 针对倾斜刻印设计自适应增强策略
+
+## 当前进度说明
+
+- ✅ 已完成刻印区域检测模型的训练、验证与文档化
+- ⏳ 待接入 OCR 识别模块，完成端到端字符提取
+- ⏳ 待开展复杂光照与强反光场景下的鲁棒性测试
+
+**下一步计划**：基于检测框进行 ROI 裁剪，并接入 PaddleOCR / CRNN 完成字符识别链路验证。

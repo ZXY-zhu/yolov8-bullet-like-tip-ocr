@@ -1,0 +1,8 @@
+# YOLOv8 Dataset Config Example
+# Copy this file to data.yaml and modify paths before training
+
+train: /root/autodl-tmp/dataset/train.txt
+val: /root/autodl-tmp/dataset/val.txt
+
+names:
+  0: tip_number_region
