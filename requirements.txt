@@ -1,0 +1,6 @@
+torch>=2.0
+ultralytics
+opencv-python
+matplotlib
+paddlepaddle==3.3.1
+paddleocr==3.7.0

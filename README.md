@@ -48,10 +48,12 @@ pip install -r requirements.txt
 
 主要依赖：
 
-- Python >= 3.8
-- PyTorch >= 2.0
+- Python>=3.8
+- PyTorch>=2.0
 - Ultralytics YOLOv8
 - OpenCV
+- paddlepaddle==3.3.1
+- paddleocr==3.7.0
 - Matplotlib
 
 ## 四、快速开始
@@ -60,7 +62,14 @@ pip install -r requirements.txt
 
 复制示例配置，并根据实际路径修改：
 
+#### Linux / Mac
 cp data.yaml.example data.yaml.local
+
+#### Windows PowerShell
+copy data.yaml.example data.yaml.local
+
+> `data.yaml.example` 为配置模板，实际训练前需复制为 `data.yaml` 并修改路径。  
+> 该文件已加入 `.gitignore`，避免本地路径泄露。
 
 data.yaml.local 内容（服务器环境）：
 
@@ -105,11 +114,13 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 .
 
-├── assets/                    # 静态资源（提交）
+├── assets/                    # 静态资源
 
 │   └── results.png            # 训练曲线图
 
 ├── notes.md                   # 个人学习笔记（不提交）
+
+├── requirements.txt           # 项目依赖清单
 
 ├── data.yaml.example          # 数据配置模板（参考用）
 
@@ -121,7 +132,9 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 │   ├── labelsTOyolo.py        # 标签转 YOLO 格式（强制类别 ID=0）
 
-│   └── test_env.py            # 环境测试脚本
+│   ├── test_env.py            # 环境测试脚本
+
+│   └── test_single_image.py   # PaddleOCR 单图推理测试脚本
 
 ├── runs/                      # 训练输出目录（不提交，含 best.pt / results.png 等）
 
@@ -135,7 +148,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 ## 七、当前进度说明
 - ✅ 已完成刻印区域检测模型的训练、验证与文档化
-- ⏳ 待接入 OCR 识别模块，完成端到端字符提取
+- ✅ PaddleOCR 3.x 环境与新 API 已跑通，单图推理无底层崩溃
+- ⏳ 原始刻印图直接 OCR 当前存在 0 文本区域检出情况，需结合 YOLO ROI 与图像增强进一步验证
 - ⏳ 待在现有数据集分布下，验证复杂光照与强反光场景下的检测稳定性
 
 **下一步计划**：基于检测框进行 ROI 裁剪，并接入 PaddleOCR / CRNN 完成字符识别链路验证。
@@ -155,6 +169,10 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 梳理 YOLO 与 OCR 分工：YOLO 负责定位，OCR 负责识别，后处理负责过滤误检
 - 制定迭代路线：优先完成 OCR 后处理方案（一期），视时间再优化检测阶段手写体排斥能力（二期）
 - 补充 LabelImg 字母映射导致类别 ID 非 0 的隐蔽问题说明
+- 新增 `tools/test_single_image.py`，用于 PaddleOCR 3.x 单图推理验证
+- 确认 PaddleOCR 初始化需添加 `enable_mkldnn=False`，以规避 PaddleX/oneDNN/PIR 相关 `NotImplementedError`
+- 初步验证：PP-OCRv6 对原始金属刻印图直接推理可能返回 0 个文本区域
+- 明确后续方向：不能依赖通用 OCR 直接识别原始工业刻印图，需要 YOLO ROI 裁剪 + 图像增强/二值化/CLAHE 后再识别
 
 ### 2026-08-06（第一天）
 - 完成 YOLOv8 模型训练、验证与文档初稿
