@@ -173,6 +173,7 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 确认 PaddleOCR 初始化需添加 `enable_mkldnn=False`，以规避 PaddleX/oneDNN/PIR 相关 `NotImplementedError`
 - 初步验证：PP-OCRv6 对原始金属刻印图直接推理可能返回 0 个文本区域
 - 明确后续方向：不能依赖通用 OCR 直接识别原始工业刻印图，需要 YOLO ROI 裁剪 + 图像增强/二值化/CLAHE 后再识别
+- 新增 `requirements.txt`，锁定 PaddlePaddle==3.3.1 与 PaddleOCR==3.7.0，确保环境可复现
 
 ### 2026-08-06（第一天）
 - 完成 YOLOv8 模型训练、验证与文档初稿
