@@ -67,10 +67,14 @@ pip install -r requirements.txt
 复制示例配置，并根据实际路径修改，生成本地私有配置文件：
 
 #### Linux / Mac
+```bash
 cp data.yaml.example data.yaml
+```
 
 #### Windows PowerShell
+```bash
 copy data.yaml.example data.yaml
+```
 
 > `data.yaml.example` 为配置模板，`data.yaml` 为实际使用的本地配置文件。  
 > `data.yaml` 已被加入 `.gitignore`，不会上传至 GitHub，避免泄露本地或服务器路径。
@@ -87,14 +91,19 @@ names:
 ### 4.2 训练模型
 
 #### GPU（推荐）
+```bash
 yolo train model=yolov8n.pt data=data.yaml epochs=50 imgsz=640 batch=8 device=0
+```
 
 #### CPU（仅调试）
+```bash
 yolo train model=yolov8n.pt data=data.yaml epochs=5 imgsz=640 batch=2 device=cpu
+```
 
 ### 4.3 推理测试
-
+```bash
 yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/images/val save=True
+```
 
 > 注：`bullet_tip_v1` 为示例训练输出目录，实际使用时请根据 `runs/detect/` 下的具体文件夹名调整。
 
@@ -147,9 +156,9 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 ```
 说明：
 - 带（不提交）标记的文件/目录已加入 `.gitignore`，不会上传至 GitHub；
-- 实际训练使用 `data.yaml`，该文件仅存在于本地，不会被版本管理；
-- 使用者需根据 `data.yaml.example` 创建本地配置；
-- `weekly_reports/` 仅存放个人实习周报，不属于项目交付内容。
+- 实际训练使用 `data.yaml`，该文件仅存在于本地，由使用者根据环境自行创建，不会被版本管理；
+- `weekly_reports/` 存放个人实习周报，不纳入版本管理与项目交付范围；
+- 使用者需根据 `data.yaml.example` 创建本地配置。
 
 ## 七、当前进度说明
 - ✅ 已完成刻印区域检测模型的训练、验证与文档化
