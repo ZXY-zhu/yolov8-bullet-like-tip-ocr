@@ -94,11 +94,13 @@ yolo train model=yolov8n.pt data=data.yaml epochs=5 imgsz=640 batch=2 device=cpu
 
 yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/images/val save=True
 
+> 注：`bullet_tip_v1` 为示例训练输出目录，实际使用时请根据 `runs/detect/` 下的具体文件夹名调整。
+
 ## 五、实验结果
 
 ### 5.1 本地 CPU 验证结果（流程正确性验证）
 
-- 目的：验证训练流程、数据加载与标签解析是否正常
+- 目的：验证训练流水线连通性及标签解析一致性（排除静默失效风险）
 - 硬件：AMD Ryzen 7 7730U（无独显）
 - mAP50：0.994
 - mAP50-95：0.889
@@ -125,33 +127,19 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 ## 六、项目结构
 
 .
-
 ├── assets/                    # 静态资源
-
 │   └── results.png            # 训练曲线图
-
 ├── notes.md                   # 个人学习笔记（不提交）
-
 ├── requirements.txt           # 项目依赖清单
-
 ├── data.yaml.example          # 数据配置模板（参考用）
-
 ├── data.yaml.local            # 本地私有配置（不提交，由 data.yaml.example 复制生成）
-
 ├── train.py                   # 训练脚本
-
 ├── tools/                     # 工具脚本目录
-
 │   ├── labelsTOyolo.py        # 标签标准化脚本（统一类别 ID 为 0）
-
 │   ├── test_env.py            # 环境测试脚本
-
 │   └── test_single_image.py   # PaddleOCR 单图推理测试脚本
-
 ├── runs/                      # 训练输出目录（不提交，含 best.pt / results.png 等）
-
 ├── yolov8n.pt                 # YOLOv8n 预训练权重（不提交，首次训练自动下载）
-
 └── README.md                  # 项目说明文档
 
 说明：
@@ -174,6 +162,14 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 针对倾斜刻印设计自适应增强策略
 
 ## 九、更新日志
+
+### 2026-08-07（第三天）
+- 重构 `train.py`，移除过期数据清洗注释，新增 CPU 调试专用文档字符串（Docstring）
+- 完善 README 中 CPU / GPU 训练说明，明确 CPU 指标仅用于流程验证
+- 在 `requirements.txt` 中补充 PyTorch CPU / GPU 安装指引
+- 确立“代码管逻辑、文档管使用、notes 管实验”的信息分层规范
+
+> 说明：今日重点由功能验证转向工程规范化，明确训练脚本的最小化职责，避免文档误导后续使用者。
 
 ### 2026-08-06（第二天）
 - 明确项目为个人验证性质，暂不追求工业级鲁棒性
