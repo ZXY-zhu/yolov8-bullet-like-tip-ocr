@@ -64,7 +64,7 @@ pip install -r requirements.txt
 
 ### 4.1 准备数据配置
 
-复制示例配置，并根据实际路径修改：
+复制示例配置，并根据实际路径修改，生成本地私有配置文件：
 
 #### Linux / Mac
 cp data.yaml.example data.yaml
@@ -72,15 +72,17 @@ cp data.yaml.example data.yaml
 #### Windows PowerShell
 copy data.yaml.example data.yaml
 
-> `data.yaml.example` 为配置模板，实际训练前需复制为 `data.yaml` 并修改路径。  
-> 该文件已加入 `.gitignore`，避免本地路径泄露。
+> `data.yaml.example` 为配置模板，`data.yaml` 为实际使用的本地配置文件。  
+> `data.yaml` 已被加入 `.gitignore`，不会上传至 GitHub，避免泄露本地或服务器路径。
 
 数据配置内容（服务器环境示例）：
 
+```yaml
 train: /root/autodl-tmp/dataset/train.txt
 val: /root/autodl-tmp/dataset/val.txt
 names:
   0: tip_number_region
+```
 
 ### 4.2 训练模型
 
@@ -125,40 +127,29 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 ![YOLOv8 训练曲线](assets/results.png)
 
 ## 六、项目结构
-
+```text
 .
-
 ├── assets/                    # 静态资源
-
 │   └── results.png            # 训练曲线图
-
+├── weekly_reports/            # 个人实习周报（不提交）
 ├── notes.md                   # 个人学习笔记（不提交）
-
 ├── requirements.txt           # 项目依赖清单
-
 ├── data.yaml.example          # 数据配置模板（参考用）
-
-├── data.yaml.local            # 本地私有配置（不提交，由 data.yaml.example 复制生成）
-
+├── data.yaml                  # 本地私有配置（不提交，由 data.yaml.example 复制生成）
 ├── train.py                   # 训练脚本
-
 ├── tools/                     # 工具脚本目录
-
 │   ├── labelsTOyolo.py        # 标签标准化脚本（统一类别 ID 为 0）
-
 │   ├── test_env.py            # 环境测试脚本
-
 │   └── test_single_image.py   # PaddleOCR 单图推理测试脚本
-
 ├── runs/                      # 训练输出目录（不提交，含 best.pt / results.png 等）
-
 ├── yolov8n.pt                 # YOLOv8n 预训练权重（不提交，首次训练自动下载）
-
 └── README.md                  # 项目说明文档
-
+```
 说明：
-- 带（不提交）标记的文件/目录已加入 .gitignore，不会上传至 GitHub
-- 使用者需自行下载预训练权重，并根据 data.yaml.example 创建本地配置
+- 带（不提交）标记的文件/目录已加入 `.gitignore`，不会上传至 GitHub；
+- 实际训练使用 `data.yaml`，该文件仅存在于本地，不会被版本管理；
+- 使用者需根据 `data.yaml.example` 创建本地配置；
+- `weekly_reports/` 仅存放个人实习周报，不属于项目交付内容。
 
 ## 七、当前进度说明
 - ✅ 已完成刻印区域检测模型的训练、验证与文档化

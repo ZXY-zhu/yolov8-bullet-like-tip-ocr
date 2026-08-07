@@ -1,6 +1,5 @@
 # === 本地私有配置 ===
 data.yaml
-data.yaml.local
 *.cache
 
 # === 训练输出和权重文件 ===
@@ -22,5 +21,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# === 个人学习笔记 ===
+# === 个人学习笔记及报告 ===
 notes.md
+weekly_reports/
