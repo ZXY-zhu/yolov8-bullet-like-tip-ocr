@@ -21,24 +21,26 @@
 
 ### 标注预处理逻辑
 
-由于原始标注中标签类别可能为数字或字母， 导致 LabelImg 导出的 YOLO 格式标签中类别 ID ≠ 0。
+本项目为单类别检测任务，仅关注“刻印区域”。然而在早期标注及导出过程中，部分 YOLO 标签文件的首字段（类别 ID）可能为数字、字母或非零映射结果，而非统一的 `0`。
 
-YOLOv8 在解析标签文件时，遇到非数字或类别 ID ≠ 0 的情况会**静默忽略整行**，既不报错也不告警，极易造成“标注存在但训练无效”的问题。
+YOLOv8 在解析标签时，若类别 ID 无法映射到 `data.yaml` 中定义的类别索引，会**静默忽略整行标注**，既不报错也不告警。这可能导致一种隐蔽问题：**标签文件存在，但训练时并未真正生效**。
 
-标注阶段仅框选印刷体刻印区域，手写体编号视为背景不予标注，以确保检测与识别模块仅关注刻印内容。
+为避免上述问题，同时保证 OCR 输入纯净，采取以下策略：
 
-为此编写 `tools/labelsTOyolo.py`，采用保守策略：
+- 标注阶段仅框选印刷体刻印区域；
+- 手写体编号视为背景，不予标注，避免污染后续 OCR 输入；
+- 编写 `tools/labelsTOyolo.py`，对标签进行标准化处理：
+  - 不修改原始标签文件；
+  - 读取 `labels/*.txt`；
+  - 将每行第一个字段统一改写为 `"0"`，以适配单类别检测任务；
+  - 保留剩余四个字段（归一化后的 x, y, w, h）；
+  - 输出至 `labels_yolo/*.txt`。
 
-- 不修改原始标签文件
-- 仅读取 `labels/*.txt`
-- 将每行第一个字段（类别 ID）强制重写为 `"0"`
-- 保留剩余四个字段（归一化后的 x, y, w, h）
-- 输出至 `labels_yolo/*.txt`
-
-该策略确保：
-- 检测阶段只关注“刻印区域是否存在”
-- 字符内容交由后续 OCR 阶段独立识别
-- 训练过程无隐性目标丢失
+该方案确保：
+- 检测阶段仅关注“刻印区域是否存在”；
+- 字符内容由后续 OCR 模块独立识别；
+- 消除因类别 ID 不一致导致的标注静默失效问题；
+- 单类别训练标签保持统一、可控。
 
 ## 三、环境依赖
 
@@ -63,15 +65,15 @@ pip install -r requirements.txt
 复制示例配置，并根据实际路径修改：
 
 #### Linux / Mac
-cp data.yaml.example data.yaml.local
+cp data.yaml.example data.yaml
 
 #### Windows PowerShell
-copy data.yaml.example data.yaml.local
+copy data.yaml.example data.yaml
 
 > `data.yaml.example` 为配置模板，实际训练前需复制为 `data.yaml` 并修改路径。  
 > 该文件已加入 `.gitignore`，避免本地路径泄露。
 
-data.yaml.local 内容（服务器环境）：
+数据配置内容（服务器环境示例）：
 
 train: /root/autodl-tmp/dataset/train.txt
 val: /root/autodl-tmp/dataset/val.txt
@@ -80,7 +82,7 @@ names:
 
 ### 4.2 训练模型
 
-yolo train model=yolov8n.pt data=data.yaml.local epochs=50 imgsz=640 batch=8 device=0
+yolo train model=yolov8n.pt data=data.yaml epochs=50 imgsz=640 batch=8 device=0
 
 ### 4.3 推理测试
 
@@ -124,13 +126,13 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 ├── data.yaml.example          # 数据配置模板（参考用）
 
-├── data.yaml.local            # 本地私有配置（不提交）
+├── data.yaml.local            # 本地私有配置（不提交，由 data.yaml.example 复制生成）
 
 ├── train.py                   # 训练脚本
 
 ├── tools/                     # 工具脚本目录
 
-│   ├── labelsTOyolo.py        # 标签转 YOLO 格式（强制类别 ID=0）
+│   ├── labelsTOyolo.py        # 标签标准化脚本（统一类别 ID 为 0）
 
 │   ├── test_env.py            # 环境测试脚本
 
@@ -163,7 +165,7 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 ## 九、更新日志
 
-### 2026-08-07（第二天）
+### 2026-08-06（第二天）
 - 明确项目为个人验证性质，暂不追求工业级鲁棒性
 - 确认标注策略：手写体编号刻意不标，视为背景，避免污染 OCR 输入
 - 梳理 YOLO 与 OCR 分工：YOLO 负责定位，OCR 负责识别，后处理负责过滤误检
@@ -175,6 +177,6 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 明确后续方向：不能依赖通用 OCR 直接识别原始工业刻印图，需要 YOLO ROI 裁剪 + 图像增强/二值化/CLAHE 后再识别
 - 新增 `requirements.txt`，锁定 PaddlePaddle==3.3.1 与 PaddleOCR==3.7.0，确保环境可复现
 
-### 2026-08-06（第一天）
+### 2026-08-05（第一天）
 - 完成 YOLOv8 模型训练、验证与文档初稿
-- 完成数据集划分与标注预处理脚本开发
+- 完成数据集划分与标注预处理脚本开发（`tools/labelsTOyolo.py`）
