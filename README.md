@@ -48,6 +48,8 @@ YOLOv8 在解析标签时，若类别 ID 无法映射到 `data.yaml` 中定义�
 
 pip install -r requirements.txt
 
+> 建议使用 GPU 环境以获得正常训练速度与性能。CPU 环境仅适合流程验证。
+
 主要依赖：
 
 - Python>=3.8
@@ -82,7 +84,11 @@ names:
 
 ### 4.2 训练模型
 
+#### GPU（推荐）
 yolo train model=yolov8n.pt data=data.yaml epochs=50 imgsz=640 batch=8 device=0
+
+#### CPU（仅调试）
+yolo train model=yolov8n.pt data=data.yaml epochs=5 imgsz=640 batch=2 device=cpu
 
 ### 4.3 推理测试
 
@@ -90,15 +96,17 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 ## 五、实验结果
 
-### 5.1 基线结果（CPU 训练）
+### 5.1 本地 CPU 验证结果（流程正确性验证）
 
-- 模型：YOLOv8n
+- 目的：验证训练流程、数据加载与标签解析是否正常
 - 硬件：AMD Ryzen 7 7730U（无独显）
 - mAP50：0.994
 - mAP50-95：0.889
 - 推理速度：127 ms / 张
 
-### 5.2 GPU 重训结果（AutoDL RTX 3080 Ti，50 Epochs）
+> 注：CPU 结果仅用于功能验证，不代表模型性能上限。
+
+### 5.2 GPU 训练结果（AutoDL RTX 3080 Ti，50 Epochs）
 
 - Epochs：50
 - mAP50：0.994
@@ -107,6 +115,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - Recall：0.979
 - 推理速度：0.6 ms / 张
 - 训练耗时：~12 min
+
+> 注：GPU 结果为实际性能参考，后续实验与评估均基于此配置。
 
 ## 训练曲线
 
@@ -180,3 +190,10 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 ### 2026-08-05（第一天）
 - 完成 YOLOv8 模型训练、验证与文档初稿
 - 完成数据集划分与标注预处理脚本开发（`tools/labelsTOyolo.py`）
+
+## ⚠️ 关于 CPU / GPU 的说明
+
+- 本项目默认推荐使用 GPU 进行训练与评估；
+- `train.py` 中 `device="cpu"` **仅为本地调试用途**，不代表模型设计或性能基准；
+- CPU 环境下的指标仅用于验证训练流程与数据正确性；
+- 实际性能、推理速度与 mAP 均以 GPU（RTX 3080 Ti）结果为准。
