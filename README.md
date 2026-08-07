@@ -182,8 +182,10 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 完善 README 中 CPU / GPU 训练说明，明确 CPU 指标仅用于流程验证
 - 在 `requirements.txt` 中补充 PyTorch CPU / GPU 安装指引
 - 确立“代码管逻辑、文档管使用、notes 管实验”的信息分层规范
+- 将 README 命令与 YAML 配置统一包裹为代码块，提升可读性
+- 明确 `data.yaml` 由使用者自行创建，`weekly_reports/` 不纳入版本管理
 
-> 说明：今日重点由功能验证转向工程规范化，明确训练脚本的最小化职责，避免文档误导后续使用者。
+> 说明：今日重点由功能验证转向工程规范化，涵盖脚本精简、依赖说明、文档排版与使用边界澄清。
 
 ### 2026-08-06（第二天）
 - 明确项目为个人验证性质，暂不追求工业级鲁棒性
