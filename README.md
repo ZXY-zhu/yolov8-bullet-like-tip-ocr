@@ -127,19 +127,33 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 ## 六、项目结构
 
 .
+
 ├── assets/                    # 静态资源
+
 │   └── results.png            # 训练曲线图
+
 ├── notes.md                   # 个人学习笔记（不提交）
+
 ├── requirements.txt           # 项目依赖清单
+
 ├── data.yaml.example          # 数据配置模板（参考用）
+
 ├── data.yaml.local            # 本地私有配置（不提交，由 data.yaml.example 复制生成）
+
 ├── train.py                   # 训练脚本
+
 ├── tools/                     # 工具脚本目录
+
 │   ├── labelsTOyolo.py        # 标签标准化脚本（统一类别 ID 为 0）
+
 │   ├── test_env.py            # 环境测试脚本
+
 │   └── test_single_image.py   # PaddleOCR 单图推理测试脚本
+
 ├── runs/                      # 训练输出目录（不提交，含 best.pt / results.png 等）
+
 ├── yolov8n.pt                 # YOLOv8n 预训练权重（不提交，首次训练自动下载）
+
 └── README.md                  # 项目说明文档
 
 说明：
