@@ -147,9 +147,10 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 ├── data.yaml                  # 本地私有配置（不提交，由 data.yaml.example 复制生成）
 ├── train.py                   # 训练脚本
 ├── tools/                     # 工具脚本目录
-│   ├── labelsTOyolo.py        # 标签标准化脚本（统一类别 ID 为 0）
 │   ├── test_env.py            # 环境测试脚本
-│   └── test_single_image.py   # PaddleOCR 单图推理测试脚本
+│   ├── labelsTOyolo.py        # 标签标准化脚本（统一类别 ID 为 0）
+│   ├── test_single_image.py   # PaddleOCR 单图推理测试脚本
+│   └── crop_roi.py            # YOLOv8 检测 + PaddleOCR 识别端到端推理脚本
 ├── runs/                      # 训练输出目录（不提交，含 best.pt / results.png 等）
 ├── yolov8n.pt                 # YOLOv8n 预训练权重（不提交，首次训练自动下载）
 └── README.md                  # 项目说明文档
@@ -161,21 +162,33 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 使用者需根据 `data.yaml.example` 创建本地配置。
 
 ## 七、当前进度说明
-- ✅ 已完成刻印区域检测模型的训练、验证与文档化
-- ✅ PaddleOCR 3.x 环境与新 API 已跑通，单图推理无底层崩溃
-- ⏳ 原始刻印图直接 OCR 当前存在 0 文本区域检出情况，需结合 YOLO ROI 与图像增强进一步验证
-- ⏳ 待在现有数据集分布下，验证复杂光照与强反光场景下的检测稳定性
+- ✅ 刻印区域检测模型训练完成，指标稳定
+- ✅ PaddleOCR 3.x 环境与新 API 已跑通
+- ✅ 完成 `tools/crop_roi.py`，YOLO 检测 → ROI 裁剪 → OCR 识别链路打通（当前为验证脚本，非部署用）
+- ❌ 当前 OCR 识别质量较差，ROI 对比度低，置信度约 0.23
+- ⏳ 待验证 ROI 增强（灰度 / 反色 / CLAHE / 二值化）对识别效果的提升
+- ⏳ 待在现有数据集分布下，验证复杂光照与强反光场景下的识别稳定性
 
-**下一步计划**：基于检测框进行 ROI 裁剪，并接入 PaddleOCR / CRNN 完成字符识别链路验证。
+**下一步计划**：  
+编写 `tools/enhance_roi.py`，在 ROI 送入 OCR 前进行图像增强。
 
-> 说明：当前版本面向实验室验证，未覆盖真实产线环境下的长期稳定性与极端工况鲁棒性测试；若后续手写体误检频发，计划引入 OCR 后处理过滤或强负样本训练进行优化。
+> 说明：当前版本面向实验室验证，未覆盖真实产线环境下的长期稳定性与极端工况鲁棒性测试。
 
 ## 八、后续工作
 - 优化强反光与小目标场景下的检测稳定性
-- 接入 PaddleOCR / CRNN 完成刻印字符端到端识别
+- 接入 PaddleOCR 完成刻印字符端到端识别（已实现，待 ROI 增强优化）
 - 针对倾斜刻印设计自适应增强策略
 
 ## 九、更新日志
+
+### 2026-08-12（第四天）
+- 为 `tools/labelsTOyolo.py` 补充注释
+- 新建 `tools/crop_roi.py`，打通 YOLOv8 + PaddleOCR 端到端推理流程
+- 确认当前 OCR 识别瓶颈：原始 ROI 对比度低，置信度仅 ~0.23
+- 规划 ROI 图像增强方案（灰度 → 反色 → CLAHE → 二值化）
+- 整理脚本学习笔记至 `notes.md`（不上传 GitHub）
+
+> 说明：此前已完成模型训练与 OCR 环境验证，本次为复工后首次更新，重点为推理链路工程化与问题定位。
 
 ### 2026-08-07（第三天）
 - 重构 `train.py`，移除过期数据清洗注释，新增 CPU 调试专用文档字符串（Docstring）

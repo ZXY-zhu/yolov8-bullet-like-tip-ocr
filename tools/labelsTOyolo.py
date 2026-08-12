@@ -1,3 +1,6 @@
+# tools/labelsTOyolo.py
+# 用途：统一 YOLO 标签类别 ID 为 0，修复 LabelImg 映射问题
+
 from pathlib import Path
 
 src_dir = Path("C:/Users/BeLig/Desktop/ocr/no/labels")        # 原来的标签
