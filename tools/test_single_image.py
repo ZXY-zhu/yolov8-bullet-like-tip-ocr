@@ -1,7 +1,7 @@
 from paddleocr import PaddleOCR
 import cv2
 
-img_path = "C:/Users/BeLig/....jpg"  # 换成你的一张真实图片
+img_path = r"C:\Users\BeLig\test.jpg"  # 换成你的一张真实图片
 
 # PaddleOCR 初始化
 ocr = PaddleOCR(
