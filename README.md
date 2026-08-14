@@ -133,7 +133,7 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 **训练曲线**
 
-![YOLOv8 训练曲线](./assets/results.png)
+![YOLOv8 训练曲线](https://raw.githubusercontent.com/ZXY-zhu/yolov8-bullet-like-tip-ocr/exp/batch-baseline-car-15/assets/results.png)
 
 ### 5.3 预处理 A/B 测试与选型
 
