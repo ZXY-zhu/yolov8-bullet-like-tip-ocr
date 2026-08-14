@@ -131,15 +131,25 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 > 注：GPU 结果为实际性能参考，后续实验与评估均基于此配置。
 
-## 训练曲线
+**训练曲线**
 
 ![YOLOv8 训练曲线](assets/results.png)
 
+### 5.3 预处理 A/B 测试与选型
+
+为突破通用 PaddleOCR 在工业刻印 ROI 上的识别瓶颈，对三个预处理方案进行了 100 张图像的 A/B 测试：
+
+- **v2（CLAHE + 9×9 模糊 + 3×3 实心化 + 48px 归一化 + 320 Padding）**：CAR = 13.35%（最优）
+- **Plan A（基线 + 2×2 膨胀，无归一化）**：CAR = 9.94%
+- **Plan C（5×5 模糊 + 开运算 + 64px）**：CAR = 5.68%
+
+基于 A/B 测试结果，选定 **v2 管道** 进行 1813 张全量测试，最终 CAR = **8.54%**。确认此为通用 PaddleOCR 在当前数据集上的真实天花板。
+
 ## 六、项目结构
 ```text
-.
-├── assets/                    # 静态资源
+├── assets/                    # 静态资源（README 用图）
 │   └── results.png            # 训练曲线图
+├── learn/                     # 代码学习脚本（不提交）
 ├── weekly_reports/            # 个人实习周报（不提交）
 ├── notes.md                   # 个人学习笔记（不提交）
 ├── requirements.txt           # 项目依赖清单
@@ -147,13 +157,14 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 ├── data.yaml                  # 本地私有配置（不提交，由 data.yaml.example 复制生成）
 ├── train.py                   # 训练脚本
 ├── tools/                     # 工具脚本目录
+│   ├── archive/               # 历史调试脚本归档（不提交）
+│   ├── outputs/               # 批量识别 CSV 输出（不提交）
+│   ├── tests/                 # 当前核心工具链
+│   │   ├── test_env.py        # 环境测试脚本
+│   │   └── test_single_image.py # PaddleOCR 单图推理测试脚本
 │   ├── labelsTOyolo.py        # 标签标准化脚本（统一类别 ID 为 0）
-│   ├── test_env.py            # 环境测试脚本
-│   ├── test_single_image.py   # PaddleOCR 单图推理测试脚本
-│   ├── predict.py             # 单张图像检测+识别调试脚本
 │   ├── crop_roi.py            # YOLO 检测 + PaddleOCR 识别端到端推理脚本
-│   ├── predict_batch.py       # 批量识别脚本（基础版）
-│   ├── predict_batch_mp2.py   # 批量识别脚本（2进程并行优化版）
+│   ├── predict_batch.py       # 批量识别（v2 预处理管道，2 进程并行）
 │   └── evaluate_accuracy.py   # OCR 评估脚本（计算 CAR/CER/混淆矩阵）
 ├── runs/                      # 训练输出目录（不提交，含 best.pt / results.png 等）
 ├── yolov8n.pt                 # YOLOv8n 官方预训练权重（不提交，首次 train 时自动下载）
@@ -164,7 +175,6 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 实际训练使用 `data.yaml`，该文件仅存在于本地，由使用者根据环境自行创建，不会被版本管理；
 - `weekly_reports/` 存放个人实习周报，不纳入版本管理与项目交付范围；
 - 使用者需根据 `data.yaml.example` 创建本地配置。
-- `tools/` 存放各类辅助与实验脚本，其中 `predict.py`、`predict_batch_mp2.py` 及 `evaluate_accuracy.py` 为当前核心链路脚本。
 
 ## 七、当前进度说明
 
@@ -172,38 +182,47 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 刻印区域检测模型训练完成（mAP50: 0.994, mAP50-95: 0.910）
 - PaddleOCR 3.x 环境与新 API 跑通
 - YOLO 检测 → ROI 裁剪 → OCR 识别端到端链路打通
-- 批量识别脚本 `tools/predict_batch_mp2.py` 开发完成（2 进程并行，1813 张/40 分钟）
+- 批量识别脚本 `tools/tests/predict_batch.py` 开发完成（v2 预处理管道，2 进程并行）
 - 评估脚本 `tools/evaluate_accuracy.py` 开发完成（CAR/CER 双指标）
 
-### ❌ 当前瓶颈（2026-08-13 批量测试结论）
-- 批量识别 1813 张图，字符准确率 CAR=15.02%，字符错误率 CER=86.21%
-- 4 位编号完全匹配率 0%
-- 各位置准确率：首位字母 3.19% / 第2位 11.42% / 第3位 19.20% / 第4位 29.86%
-- 主要错误模式：OCR 输出 `?`（缺失）而非识别错字符
-  - `0→缺失` 882 次，`D→缺失` 347 次，`C→缺失` 319 次
-- 根因定位：批量脚本 `predict_batch_mp2.py` 相比单张脚本 `predict.py` 缺少关键预处理：
-  1. **轮廓实心化**（单张版有，批量版漏了）—— 刻印字符 D/0/4/B/8 是空心体
-  2. **字符 ROI 尺寸归一化** —— PP-OCRv6 对过小字符（<32px）识别失败
-  3. **Padding 到标准宽度** —— 未适配 PP-OCRv6 输入规范
+### ❌ 当前瓶颈（2026-08-14 修正）
 
-### ⏳ 下一步实验计划
-1. 在 `predict_batch_mp2.py` 加回轮廓实心化 + 尺寸归一化到高度 48px + Padding 到 320px
-2. 先跑 100 张做 A/B 测试，对比 CAR 变化
-3. 预期 CAR 从 15% 提升至 50%+（参考工业 OCR 预处理最佳实践，合理预处理可提升 30-50%）
-4. 若仍不理想，启动 Plan B：训练单字符分类 CNN（36 类：0-9 + A-Z）
+> ⚠️ 8/13 报告的 CAR=15.02% 为虚高（评估脚本未过滤导致），已修正。
+
+- 修正后基线（带过滤）：CAR = 5.54%
+- v2 预处理管道全量（1813 张）：**CAR = 8.54%**（真实天花板）
+- 4 位完全匹配率：0%
+- 主要错误模式：OCR 输出 `?`（DB 检测模型在 ROI 上直接返回空），而非识别错字符
+- 根因：通用 PaddleOCR 对工业小字符、强反光 ROI 的 DB 检测能力不足，
+  预处理优化已达瓶颈（CAR 最高 ~8.5%）
+
+### ⏳ 下一步计划（已确定）
+- **放弃通用 PaddleOCR 识别，改为自训 CNN 字符分类器（36 类：0-9 + A-Z）**
+- 理由：PaddleOCR 的 DB 检测模块在你的 ROI 上直接返回空，预处理无法绕过此限制
+- 预计：用 YOLO 裁剪的 ROI 作为训练数据，训练轻量 CNN 做单字符分类
 
 > CAR/CER 定义：CAR = 正确识别字符数/总字符数；CER = (替换+删除+插入错误数)/总字符数
 
 > 说明：当前版本面向实验室验证，未覆盖真实产线环境下的长期稳定性与极端工况鲁棒性测试。
 
 ## 八、后续工作
-- ~~接入 PaddleOCR 完成刻印字符端到端识别~~ ✅ 已完成（CAR=15.02%，待预处理优化）
-- 优化强反光与小目标场景下的检测稳定性
-- **短期**：在批量脚本中加回轮廓实心化 + ROI 尺寸归一化到 48px + Padding 到 320px，预期 CAR 提升至 50%+
-- **中期**：若预处理优化不达预期，训练单字符分类 CNN（36 类：0-9 + A-Z）
-- 针对倾斜刻印设计自适应增强策略
+
+- ~~接入 PaddleOCR 完成刻印字符端到端识别~~ ✅ 已完成（CAR 真实天花板 ~8.5%，达瓶颈）
+- ~~优化预处理管道（轮廓实心化 + 尺寸归一化 + Padding）~~ ✅ 已完成（v2 版，CAR 8.54%）
+- **短期（进行中）**：训练单字符分类 CNN（36 类：0-9 + A-Z），替代 PaddleOCR 识别（详见瓶颈分析）
+- **中期**：若 CNN 分类达标，重新跑全量 1813 张，更新 CAR/CER 评估
+- **长期**：针对倾斜刻印设计自适应增强策略；评估是否需将手写体作为强负样本参与检测训练
 
 ## 九、更新日志
+
+### 2026-08-14（第六天）
+- 重构 `tools/` 目录结构：旧脚本归档至 `archive/`，核心脚本归入 `tests/`，输出统一至 `outputs/`
+- 修正评估脚本 `evaluate_accuracy.py` 的过滤逻辑，修复 8/13 CAR 虚高问题（15.02% → 修正后基线 5.54%）
+- 完成预处理 A/B 测试（v2/PlanA/PlanC 各 100 张），选定 v2 管道跑全量 1813 张：CAR = 8.54%（通用 PaddleOCR 真实天花板）
+- 确认下一步方向：**放弃通用 PaddleOCR，自训 CNN 做 36 类字符分类**
+- 所有脚本路径改为占位符，适配 Git 提交（不泄露本地路径）
+- 新增 `learn/` 代码学习模块（不提交）
+- 更新 README：全面修正实验数据（A/B 测试 + CAR 修正）、项目结构、后续计划与更新日志
 
 ### 2026-08-13（第五天）
 - 新增 `tools/predict_batch_mp2.py`：2 进程并行批量识别脚本（Windows spawn 兼容）

@@ -10,11 +10,10 @@ tools/crop_roi.py
 from ultralytics import YOLO
 from paddleocr import PaddleOCR
 import cv2
-import torch
 
 # ========== 1. 配置区（你经常改的地方） ==========
-img_path = r"C:\Users\BeLig\test.jpg"   # 测试图片
-model_path = r"C:\Users\BeLig\...\weights\best.pt"
+img_path = r"C:\Users\BeLig\test.jpg"   # 改成测试图片路径
+model_path = r"runs\detect\bullet_tip_v1\weights\best.pt"  # 改成你自己的 best.pt 完整路径
 conf_thres = 0.25                               # YOLO 置信度阈值
 ocr_lang = "en"
 

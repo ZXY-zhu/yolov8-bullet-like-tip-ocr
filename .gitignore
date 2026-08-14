@@ -1,18 +1,24 @@
-# === 1. 本地私有配置 ===
+# === 1. 本地私有配置与笔记 ===
 data.yaml
 *.cache
+notes.md
+weekly_reports/
+learn/
 
-# === 2. 训练输出与大模型权重 ===
+# === 2. 训练输出与大模型权重 (YOLOv8 + PaddleOCR) ===
 runs/
+tools/outputs/
 *.pt
 *.pth
 *.onnx
+yolov8n.pt
 
 # === 3. Python 环境与缓存 ===
 __pycache__/
 *.pyc
 venv/
 .conda/
+.env
 
 # === 4. IDE 与系统配置 ===
 .idea/
@@ -24,13 +30,15 @@ Thumbs.db
 *.csv
 *.log
 
-# === 6. 图像资源（保留 assets/results.png，忽略调试用的字符图）===
+# === 6. 图像资源与调试输出 ===
 assets/debug_chars/
 assets/*_raw.png
 assets/*_binary.png
 *.jpg
-*.png
 
-# === 7. 个人笔记与报告（不上传远程）===
-notes.md
-weekly_reports/
+# === 7. 其他临时文件 ===
+temp/
+*.tmp
+
+# === 8. 归档文件 (不追踪旧代码备份) ===
+tools/archive/
