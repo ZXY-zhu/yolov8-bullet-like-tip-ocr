@@ -161,7 +161,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 │   ├── outputs/               # 批量识别 CSV 输出（不提交）
 │   ├── tests/                 # 当前核心工具链
 │   │   ├── test_env.py        # 环境测试脚本
-│   │   └── test_single_image.py # PaddleOCR 单图推理测试脚本
+│   │   ├── test_single_image.py # PaddleOCR 单图推理测试脚本
+│   │   └── crop_cnn_dataset.py  # CNN 训练数据集制作脚本（从 labels_raw 裁 48×48 灰度字符图）
 │   ├── labelsTOyolo.py        # 标签标准化脚本（统一类别 ID 为 0）
 │   ├── crop_roi.py            # YOLO 检测 + PaddleOCR 识别端到端推理脚本
 │   ├── predict_batch.py       # 批量识别（v2 预处理管道，2 进程并行）
@@ -178,12 +179,13 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 ## 七、当前进度说明
 
-### ✅ 已完成
+### ✅ 已完成（更新至 2026-08-19）
 - 刻印区域检测模型训练完成（mAP50: 0.994, mAP50-95: 0.910）
 - PaddleOCR 3.x 环境与新 API 跑通
 - YOLO 检测 → ROI 裁剪 → OCR 识别端到端链路打通
 - 批量识别脚本 `tools/tests/predict_batch.py` 开发完成（v2 预处理管道，2 进程并行）
 - 评估脚本 `tools/evaluate_accuracy.py` 开发完成（CAR/CER 双指标）
+- **CNN 训练数据集制作完成**：从原始逐字符标注（`labels_raw/` + `classes.txt`）裁剪 6231 张 48×48 灰度字符图，覆盖 13 个实际出现的类别（0/1/2/3/4/5/7/8/9/B/C/D/E），存于 `dataset_cnn/`
 
 ### ❌ 当前瓶颈（2026-08-14 修正）
 
@@ -196,10 +198,10 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 根因：通用 PaddleOCR 对工业小字符、强反光 ROI 的 DB 检测能力不足，
   预处理优化已达瓶颈（CAR 最高 ~8.5%）
 
-### ⏳ 下一步计划（已确定）
-- **放弃通用 PaddleOCR 识别，改为自训 CNN 字符分类器（36 类：0-9 + A-Z）**
+### ⏳ 下一步计划（进行中）
+- **训练单字符分类 CNN（基于实际出现的 13 类，输出层待定）**，替代 PaddleOCR 识别
 - 理由：PaddleOCR 的 DB 检测模块在你的 ROI 上直接返回空，预处理无法绕过此限制
-- 预计：用 YOLO 裁剪的 ROI 作为训练数据，训练轻量 CNN 做单字符分类
+- 预计：用 `dataset_cnn/` 作为训练数据，训练轻量 CNN，推理后重新跑全量 1813 张算新 CAR
 
 > CAR/CER 定义：CAR = 正确识别字符数/总字符数；CER = (替换+删除+插入错误数)/总字符数
 
@@ -209,11 +211,18 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 - ~~接入 PaddleOCR 完成刻印字符端到端识别~~ ✅ 已完成（CAR 真实天花板 ~8.5%，达瓶颈）
 - ~~优化预处理管道（轮廓实心化 + 尺寸归一化 + Padding）~~ ✅ 已完成（v2 版，CAR 8.54%）
-- **短期（进行中）**：训练单字符分类 CNN（36 类：0-9 + A-Z），替代 PaddleOCR 识别（详见瓶颈分析）
+- **短期（进行中）**：CNN 数据集已制作完成（6231 张，13 类），下一步训练单字符分类 CNN
 - **中期**：若 CNN 分类达标，重新跑全量 1813 张，更新 CAR/CER 评估
 - **长期**：针对倾斜刻印设计自适应增强策略；评估是否需将手写体作为强负样本参与检测训练
 
 ## 九、更新日志
+
+### 2026-08-19（第七天）
+- 完成 CNN 训练数据集制作脚本 `tools/tests/crop_cnn_dataset.py`
+- 从 `labels_raw/` 原始逐字符标注 + `classes.txt` 裁剪 6231 张 48×48 灰度字符 ROI
+- 实际覆盖 13 个类别：0(1693), 1(839), 2(139), 3(321), 4(763), 5(525), 7(255), 8(251), 9(177), B(120), C(526), D(615), E(7)
+- 确认通用 PaddleOCR 路线已放弃，CNN 分类路线数据准备完毕，明日启动训练
+- 更新 README 项目结构与进度说明
 
 ### 2026-08-14（第六天）
 - 重构 `tools/` 目录结构：旧脚本归档至 `archive/`，核心脚本归入 `tests/`，输出统一至 `outputs/`
