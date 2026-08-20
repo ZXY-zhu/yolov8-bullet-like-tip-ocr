@@ -18,7 +18,6 @@ counts = {}
 
 # ========== 3. 遍历所有标签文件 ==========
 for txt_name in os.listdir(labels_dir):
-    print(f"处理中: {img_name}", end="\r")
 
     if not txt_name.endswith(".txt") or txt_name == "classes.txt":
         continue
@@ -26,6 +25,8 @@ for txt_name in os.listdir(labels_dir):
     txt_path = os.path.join(labels_dir, txt_name)
     img_name = txt_name.replace(".txt", ".jpg")
     img_path = os.path.join(images_dir, img_name)
+
+    print(f"处理中: {img_name}", end="\r")
 
     if not os.path.exists(img_path):
         print(f"⚠️ 跳过，找不到图片: {img_name}")
