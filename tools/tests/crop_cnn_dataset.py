@@ -2,11 +2,11 @@ import cv2
 import numpy as np
 import os
 
-# ========== 路径配置 ==========
-classes_path = r"C:\Users\BeLig\Desktop\dataset\labels_raw\classes.txt"
-labels_dir = r"C:\Users\BeLig\Desktop\dataset\labels_raw"
-images_dir = r"C:\Users\BeLig\Desktop\dataset\images"
-save_root = r"C:\Users\BeLig\Desktop\dataset\dataset_cnn"
+# ========== 路径配置（使用者需根据实际数据位置修改）==========
+classes_path = r"labels_raw/classes.txt"   # 示例路径，请改为实际位置
+labels_dir = r"labels_raw"                 # 示例路径，请改为实际位置
+images_dir = r"dataset/images"             # 示例路径，请改为实际位置
+save_root = r"dataset_cnn"                 # 示例路径，请改为实际位置
 
 # ========== 1. 读 classes.txt ==========
 with open(classes_path, "r", encoding="utf-8") as f:
