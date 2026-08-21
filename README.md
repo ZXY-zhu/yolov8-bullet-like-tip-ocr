@@ -1,5 +1,10 @@
 # YOLOv8 类子弹头状器件刻印区域检测
 
+[![CNN Val Acc](https://img.shields.io/badge/CNN%20Val%20Acc-95.23%25-brightgreen.svg)](https://github.com)
+[![ResNet-18 Val Acc](https://img.shields.io/badge/ResNet--18%20Val%20Acc-98.63%25-success.svg)](https://github.com)
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
+[![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-red.svg)](https://docs.ultralytics.com/)
+
 ## 一、项目背景
 
 在工业质检场景中，需要在金属器件尖端表面识别凹印/凸印编号。该类目标存在以下难点：
@@ -109,33 +114,64 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 ## 五、实验结果
 
-### 5.1 本地 CPU 验证结果（流程正确性验证）
+### 5.1 YOLOv8 检测模型
 
-- 目的：验证训练流水线连通性及标签解析一致性（排除静默失效风险）
-- 硬件：AMD Ryzen 7 7730U（无独显）
-- mAP50：0.994
-- mAP50-95：0.889
-- 推理速度：127 ms / 张
+| 指标 | 本地 CPU（流程验证） | GPU AutoDL RTX 3080 Ti（50 Epochs） |
+|---|---|---|
+| mAP50 | 0.994 | 0.994 |
+| mAP50-95 | 0.889 | 0.910 |
+| Precision | 0.979 | 0.986 |
+| Recall | 0.986 | 0.979 |
+| 推理速度 | 127 ms / 张 | 0.6 ms / 张 |
 
-> 注：CPU 结果仅用于功能验证，不代表模型性能上限。
+> CPU 结果仅用于功能验证，不代表性能上限；GPU 为实际参考。
 
-### 5.2 GPU 训练结果（AutoDL RTX 3080 Ti，50 Epochs）
+### 5.2 通用 PaddleOCR 基线（CAR 天花板）
 
-- Epochs：50
-- mAP50：0.994
-- mAP50-95：0.910
-- Precision：0.986
-- Recall：0.979
-- 推理速度：0.6 ms / 张
-- 训练耗时：~12 min
+| 方案 | CAR | 说明 |
+|---|---|---|
+| 修正后基线（带过滤） | 5.54% | 评估脚本 bug 修正后的真实值 |
+| v2 预处理全量（1813 张） | **8.54%** | CLAHE + 实心化 + 48px + 320 padding，通用 OCR 天花板 |
+| 4 位完全匹配率 | 0% | 主要错误：OCR 输出 `?`（DB 检测返回空） |
 
-> 注：GPU 结果为实际性能参考，后续实验与评估均基于此配置。
+### 5.3 定制 CNN 字符分类（替代 PaddleOCR 识别）
+
+数据集：6189 张单字符灰度图（48×48），13 类，8:2 分层拆分
+
+| 实验 | 最佳 Val Acc | 最终 Train Acc | 最终 Val Loss | 保存路径 |
+|---|---|---|---|---|
+| CNN Baseline 50ep | 94.43% | 97.48% | 0.3254 | `outputs/cnn_char_classifier_best.pth` |
+| CNN Baseline 100ep | 95.23% | 98.97% | 0.4655 | `outputs/cnn_char_classifier_best_100ep.pth` |
+| + Random Erase 100ep（最终版） | **95.23%** | 97.92% | **0.3716** | `outputs/cnn_char_classifier_best_aug.pth` |
+
+> Random Erase 版为最终交付版：Val Acc 相同但 Val Loss 更低（0.47→0.37），Train-Val 差距从 ~3.74% 缩至 ~2.69%，泛化更优。
+
+### 5.4 ResNet-18 迁移学习 ⚠️
+
+| 指标 | 值 |
+|---|---|
+| 最佳 Val Acc | **98.63%（Epoch 70）** |
+| 最终 Train Acc | 99.58% |
+| 最终 Val Loss | 0.1280 |
+| Train-Val 差距 | ~1.03% |
+| 保存路径 | `outputs/resnet18_char_classifier_best.pth` |
+
+> ⚠️ **输入 pipeline 不完善**：灰度 48×48 → 转 RGB → 拉伸 224×224，存在上采样信息损失。
+> 结果仅供参考，等原始高分辨率数据回来后需重新验证。
+
+### 5.5 关键对比
+
+| 方案 | 字符识别准确率 | 提升倍数（vs 通用 OCR） |
+|---|---|---|
+| 通用 PaddleOCR（CAR） | 8.54% | 1× |
+| 定制 CNN（最终版） | 95.23% | **11.2×** |
+| ResNet-18 迁移学习 | 98.63% ⚠️ | **11.5×** |
 
 **训练曲线**
 
 ![YOLOv8 训练曲线](https://raw.githubusercontent.com/ZXY-zhu/yolov8-bullet-like-tip-ocr/exp/batch-baseline-car-15/assets/results.png)
 
-### 5.3 预处理 A/B 测试与选型
+### 5.6 预处理 A/B 测试与选型
 
 为突破通用 PaddleOCR 在工业刻印 ROI 上的识别瓶颈，对三个预处理方案进行了 100 张图像的 A/B 测试：
 
@@ -149,6 +185,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 ```text
 ├── assets/                    # 静态资源（README 用图）
 │   └── results.png            # 训练曲线图
+├── docs/                      # 项目文档
+│   └── experiment_log.md      # 完整实验记录（从 YOLO 到 CNN 到 ResNet 的演进）
 ├── learn/                     # 代码学习脚本（不提交）
 ├── weekly_reports/            # 个人实习周报（不提交）
 ├── notes.md                   # 个人学习笔记（不提交）
@@ -160,9 +198,11 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 │   ├── archive/               # 历史调试脚本归档（不提交）
 │   ├── outputs/               # 批量识别 CSV 输出（不提交）
 │   ├── tests/                 # 当前核心工具链
-│   │   ├── test_env.py        # 环境测试脚本
+│   │   ├── test_env.py          # 环境测试脚本
 │   │   ├── test_single_image.py # PaddleOCR 单图推理测试脚本
-│   │   └── crop_cnn_dataset.py  # CNN 训练数据集制作脚本（从 labels_raw 裁 48×48 灰度字符图）
+│   │   ├── crop_cnn_dataset.py  # CNN 训练数据集制作脚本（从 labels_raw 裁 48×48 灰度字符图）
+│   │   ├── train_cnn_aug.py     # 定制 CNN 最终版（100ep + Random Erase, Val Acc 95.23%）
+│   │   └── train_resnet18.py    # ResNet-18 迁移学习（100ep, Val Acc 98.63% ⚠️）
 │   ├── labelsTOyolo.py        # 标签标准化脚本（统一类别 ID 为 0）
 │   ├── crop_roi.py            # YOLO 检测 + PaddleOCR 识别端到端推理脚本
 │   ├── predict_batch.py       # 批量识别（v2 预处理管道，2 进程并行）
@@ -179,29 +219,23 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 ## 七、当前进度说明
 
-### ✅ 已完成（更新至 2026-08-19）
+### ✅ 已完成
 - 刻印区域检测模型训练完成（mAP50: 0.994, mAP50-95: 0.910）
-- PaddleOCR 3.x 环境与新 API 跑通
+- PaddleOCR 3.x 环境与新 API 跑通，确认通用 OCR 在该数据上 CAR 天花板为 8.54%
 - YOLO 检测 → ROI 裁剪 → OCR 识别端到端链路打通
-- 批量识别脚本 `tools/tests/predict_batch.py` 开发完成（v2 预处理管道，2 进程并行）
-- 评估脚本 `tools/evaluate_accuracy.py` 开发完成（CAR/CER 双指标）
-- **CNN 训练数据集制作完成**：从原始逐字符标注（`labels_raw/` + `classes.txt`）裁剪 6231 张 48×48 灰度字符图，覆盖 13 个实际出现的类别（0/1/2/3/4/5/7/8/9/B/C/D/E），存于 `dataset_cnn/`
+- CNN 训练数据集制作完成：6189 张 48×48 灰度字符图，13 类
+- 定制 CNN 训练完成（100ep + Random Erase），Val Acc **95.23%**
+- ResNet-18 迁移学习训练完成（100ep），Val Acc **98.63%** ⚠️
+- 实验记录完整归档：`docs/experiment_log.md`
 
-### ❌ 当前瓶颈（2026-08-14 修正）
+### ❌ 当前瓶颈
+- 通用 PaddleOCR CAR 仅 8.54%，已确认天花板（DB 检测在 ROI 上返回空）
+- ResNet-18 输入 pipeline 不完善（灰度 48→224 上采样），结果需等原始数据重跑确认
+- 部分样本因物理限制（反光中空、旋转遮挡、脏污）信息丢失，模型再深也无法突破
 
-> ⚠️ 8/13 报告的 CAR=15.02% 为虚高（评估脚本未过滤导致），已修正。
-
-- 修正后基线（带过滤）：CAR = 5.54%
-- v2 预处理管道全量（1813 张）：**CAR = 8.54%**（真实天花板）
-- 4 位完全匹配率：0%
-- 主要错误模式：OCR 输出 `?`（DB 检测模型在 ROI 上直接返回空），而非识别错字符
-- 根因：通用 PaddleOCR 对工业小字符、强反光 ROI 的 DB 检测能力不足，
-  预处理优化已达瓶颈（CAR 最高 ~8.5%）
-
-### ⏳ 下一步计划（进行中）
-- **训练单字符分类 CNN（基于实际出现的 13 类，输出层待定）**，替代 PaddleOCR 识别
-- 理由：PaddleOCR 的 DB 检测模块在你的 ROI 上直接返回空，预处理无法绕过此限制
-- 预计：用 `dataset_cnn/` 作为训练数据，训练轻量 CNN，推理后重新跑全量 1813 张算新 CAR
+### ⏳ 下一步计划
+- 编写推理脚本，用最佳模型跑全量 1813 张图，计算端到端 CAR
+- 等原始高分辨率数据回来后：重跑 ResNet-18（RGB 224×224，无拉伸）+ 跨域泛化验证
 
 > CAR/CER 定义：CAR = 正确识别字符数/总字符数；CER = (替换+删除+插入错误数)/总字符数
 
@@ -209,13 +243,22 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 ## 八、后续工作
 
-- ~~接入 PaddleOCR 完成刻印字符端到端识别~~ ✅ 已完成（CAR 真实天花板 ~8.5%，达瓶颈）
-- ~~优化预处理管道（轮廓实心化 + 尺寸归一化 + Padding）~~ ✅ 已完成（v2 版，CAR 8.54%）
-- **短期（进行中）**：CNN 数据集已制作完成（6231 张，13 类），下一步训练单字符分类 CNN
-- **中期**：若 CNN 分类达标，重新跑全量 1813 张，更新 CAR/CER 评估
-- **长期**：针对倾斜刻印设计自适应增强策略；评估是否需将手写体作为强负样本参与检测训练
+- ~~接入 PaddleOCR 完成刻印字符端到端识别~~ ✅ 已完成（CAR 天花板 8.54%，已放弃通用方案）
+- ~~优化预处理管道~~ ✅ 已完成（v2 版，CAR 8.54%）
+- ~~训练单字符分类 CNN~~ ✅ 已完成（定制 CNN 95.23%，Random Erase 增强版为最终交付）
+- ~~ResNet-18 迁移学习验证~~ ✅ 已完成（98.63%，⚠️ 输入 pipeline 待完善重跑）
+- **短期（进行中）**：编写推理脚本，全量 1813 张重新评估端到端 CAR
+- **中期**：原始数据回来后重跑 ResNet-18 + 引入公开数据集做跨域验证
+- **长期**：探索跨域泛化能力（不同材质/形状工业器件上的适用性验证）
 
 ## 九、更新日志
+
+### 2026-08-21（第八天）
+- 完成 CNN 训练脚本（50ep / 100ep / +Random Erase 增强），最佳 Val Acc **95.23%**
+- 完成 ResNet-18 迁移学习训练（100ep），最佳 Val Acc **98.63%**（⚠️ 输入 pipeline 不完善）
+- 新增 `train_cnn_aug.py`（最终版 CNN）和 `train_resnet18.py`，输出至 `outputs/`
+- 实验记录整理至 `docs/experiment_log.md`
+- 更新 README：新增 CNN/ResNet 实验结果、项目结构、进度说明
 
 ### 2026-08-19（第七天）
 - 完成 CNN 训练数据集制作脚本 `tools/tests/crop_cnn_dataset.py`
