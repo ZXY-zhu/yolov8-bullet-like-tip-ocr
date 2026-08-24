@@ -181,6 +181,9 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 基于 A/B 测试结果，选定 **v2 管道** 进行 1813 张全量测试，最终 CAR = **8.54%**。确认此为通用 PaddleOCR 在当前数据集上的真实天花板。
 
+> 📌 `main.py` 当前默认使用 ResNet-18 做字符识别（推理阶段）。定制 CNN 作为训练对比模型，
+> 待 536 张新数据标注完成后将重训 CNN 并切换为最终推理模型。
+
 ## 六、项目结构
 ```text
 ├── assets/                    # 静态资源（README 用图）
@@ -194,6 +197,7 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 ├── data.yaml.example          # 数据配置模板（参考用）
 ├── data.yaml                  # 本地私有配置（不提交，由 data.yaml.example 复制生成）
 ├── train.py                   # 训练脚本
+├── main.py                    # 刻印检测+识别端到端推理脚本（YOLO + ResNet/CNN → YOLO txt）
 ├── tools/                     # 工具脚本目录
 │   ├── archive/               # 历史调试脚本归档（不提交）
 │   ├── outputs/               # 批量识别 CSV 输出（不提交）
@@ -227,6 +231,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 定制 CNN 训练完成（100ep + Random Erase），Val Acc **95.23%**
 - ResNet-18 迁移学习训练完成（100ep），Val Acc **98.63%** ⚠️
 - 实验记录完整归档：`docs/experiment_log.md`
+- 端到端推理脚本 `main.py` 开发完成（YOLO 检测 + ResNet 识别 → LabelImg 可读 YOLO txt）
+- 536 张新数据（同场景新器件）用 `main.py` 生成预测标签，已通过 LabelImg 手动修正完成
 
 ### ❌ 当前瓶颈
 - 通用 PaddleOCR CAR 仅 8.54%，已确认天花板（DB 检测在 ROI 上返回空）
@@ -234,7 +240,7 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 部分样本因物理限制（反光中空、旋转遮挡、脏污）信息丢失，模型再深也无法突破
 
 ### ⏳ 下一步计划
-- 编写推理脚本，用最佳模型跑全量 1813 张图，计算端到端 CAR
+- ~~编写推理脚本，用最佳模型跑全量 1813 张图~~ ✅ 已完成（`main.py` 已覆盖）
 - 等原始高分辨率数据回来后：重跑 ResNet-18（RGB 224×224，无拉伸）+ 跨域泛化验证
 
 > CAR/CER 定义：CAR = 正确识别字符数/总字符数；CER = (替换+删除+插入错误数)/总字符数
@@ -247,11 +253,19 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - ~~优化预处理管道~~ ✅ 已完成（v2 版，CAR 8.54%）
 - ~~训练单字符分类 CNN~~ ✅ 已完成（定制 CNN 95.23%，Random Erase 增强版为最终交付）
 - ~~ResNet-18 迁移学习验证~~ ✅ 已完成（98.63%，⚠️ 输入 pipeline 待完善重跑）
-- **短期（进行中）**：编写推理脚本，全量 1813 张重新评估端到端 CAR
+- ~~编写推理脚本，全量 1813 张重新评估端到端 CAR~~ ✅ 已完成
+- **短期（当前）**：基于 536 张新标注数据，评估当前模型检测+识别准确率，然后混入旧数据重训 CNN（增量训练）
 - **中期**：原始数据回来后重跑 ResNet-18 + 引入公开数据集做跨域验证
 - **长期**：探索跨域泛化能力（不同材质/形状工业器件上的适用性验证）
 
 ## 九、更新日志
+
+### 2026-08-24（第九天）
+- 完成端到端推理脚本 `main.py`（YOLOv8 检测 + ResNet-18 识别 → 输出 LabelImg 可读 YOLO txt，自动生成 36 类 classes.txt）
+- 用 `main.py` 对 536 张新数据（同场景新器件）生成预测标签
+- 解决 LabelImg 自动覆盖 `classes.txt` 的问题（采用临时目录隔离法）
+- 完成 536 张新数据的手动修正标注
+- 更新 README：补充 `main.py` 说明、当前进度、增量训练计划
 
 ### 2026-08-21（第八天）
 - 完成 CNN 训练脚本（50ep / 100ep / +Random Erase 增强），最佳 Val Acc **95.23%**
