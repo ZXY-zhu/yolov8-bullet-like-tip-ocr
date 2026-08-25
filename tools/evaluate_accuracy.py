@@ -1,9 +1,13 @@
 """
-evaluate_accuracy.py
-标准 OCR 评估脚本（CAR/CER + 位置准确率 + 混淆矩阵）
-
-★ 修改：只评估 CSV 中存在的文件，避免全量标签导致的数据错位
+tools/evaluate_accuracy.py
+用途：标准 OCR 评估脚本（CAR/CER + 位置准确率 + 混淆矩阵）
+说明：
+- 从 CSV 读取识别结果，与 labels_raw/ 中的 YOLO txt 标注逐字符对比
+- 计算 CAR（字符准确率）、CER（字符错误率）、各位置准确率、4 位完全匹配率
+- 只评估 CSV 中存在的文件，避免全量标签导致的数据错位
+- 运行方式：直接改下面 2 个路径，然后 python tools/evaluate_accuracy.py
 """
+
 import os
 import sys
 import csv
@@ -11,10 +15,12 @@ import pandas as pd
 from pathlib import Path
 from collections import defaultdict
 
-# ========== 路径配置 ==========
+# ========== 改这里 ==========
+LABELS_DIR = Path("labels_raw")                             # 改为实际 labels_raw 目录路径
+CSV_PATH = Path("tools/outputs/recognition_results_v2_full.csv")  # 改为实际识别结果 CSV 路径
+# ==========================
+
 BASE_DIR = Path(__file__).parent.parent
-LABELS_DIR = Path(r"C:\path\to\your\dataset\labels_raw")  # 改成你的 labels_raw 目录路径
-CSV_PATH = Path(r"tools/outputs/recognition_results_v2_full.csv")  # 改成你刚跑的 CSV 路径
 
 # ========== 类别映射（36 类：0-9 + A-Z）==========
 CLASS_NAMES = [str(i) for i in range(10)] + [chr(ord('A') + i) for i in range(26)]
@@ -149,7 +155,8 @@ total_4 = sum(1 for _, row in df.iterrows()
               if row["filename"] in ground_truths
               and len(ground_truths[row["filename"]]) == 4)
 
-print(f"\n4 位完全匹配率（仅 {total_4} 张 4 位标注图）: {match_4}/{total_4} = {match_4/total_4 * 100:.2f}%" if total_4 > 0 else "")
+if total_4 > 0:
+    print(f"\n4 位完全匹配率（仅 {total_4} 张 4 位标注图）: {match_4}/{total_4} = {match_4/total_4 * 100:.2f}%")
 
 # 混淆详情
 print(f"\n--- 混淆详情 (位置, 真实->识别, 次数) ---")

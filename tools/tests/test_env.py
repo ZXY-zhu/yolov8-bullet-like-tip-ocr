@@ -1,5 +1,5 @@
 """
-test_env.py
+tools/tests/test_env.py
 用途：验证 YOLOv8 运行环境
 创建时间：2026-08-04
 环境信息：

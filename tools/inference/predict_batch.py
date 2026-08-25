@@ -1,9 +1,12 @@
 """
-tools/predict_batch.py
-2 进程并行批量识别（适用于 16GB RAM 机器）
-★ v2 预处理管道（目前最高）
-★ 输出：tools/outputs/recognition_results_v2_full.csv
+tools/inference/predict_batch.py
+用途：2 进程并行批量识别（适用于 16GB RAM 机器）
+说明：
+- 预处理管道 v2（目前最高）
+- 输出：tools/outputs/recognition_results_v2_full.csv
+- 运行方式：直接改下面路径配置区，然后 python tools/predict_batch.py
 """
+
 import os
 import cv2
 import numpy as np
@@ -22,15 +25,14 @@ os.environ["PADDLE_PDX_ENABLE_MKLDNN_BYDEFAULT"] = "0"
 # 脚本所在目录设为 BASE_DIR (即 tools/)
 BASE_DIR = Path(__file__).parent.resolve()
 
-# 1. 图片输入目录：改成你的数据集图片路径
-IMAGE_DIR = Path(r"C:\Users\BeLig\Desktop\dataset\images")  # ← 修改此处
+IMAGE_DIR = Path("images")   # 改为实际图片输入目录路径
 
-# 2. 模型权重路径：改成你的 best.pt 路径
-YOLO_WEIGHTS = BASE_DIR.parent / "runs" / "detect" / "bullet_tip_v1" / "weights" / "best.pt"  # ← 修改此处（如果 best.pt 不在项目根目录 runs 下，请改绝对路径）
+# 模型权重路径：如果 best.pt 不在项目根目录 runs 下，改为实际路径
+YOLO_WEIGHTS = BASE_DIR.parent / "runs" / "detect" / "bullet_tip_v1" / "weights" / "best.pt"   # 改为实际模型权重路径
 
-# 3. 输出 CSV 路径：默认放在 tools/outputs/ 下
+# 输出 CSV 路径
 OUTPUT_DIR = BASE_DIR / "outputs"
-OUTPUT_DIR.mkdir(exist_ok=True)  # 自动创建 outputs 文件夹（如果 .gitignore 允许）
+OUTPUT_DIR.mkdir(exist_ok=True)
 OUTPUT_CSV = OUTPUT_DIR / "recognition_results_v2_full.csv"
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp"}
@@ -71,7 +73,6 @@ def resize_and_pad(image, target_height=48, target_width=320):
 def init_worker():
     global model, ocr
     print(f"[Worker {os.getpid()}] 加载 YOLO...", flush=True)
-    # 注意：YOLO 接收字符串路径
     model = YOLO(str(YOLO_WEIGHTS))
 
     print(f"[Worker {os.getpid()}] 加载 OCR...", flush=True)
@@ -161,13 +162,11 @@ def process_single_image(img_path_str: str):
 
             # 按位置纠错
             if has_letter and i == 0:
-                # 首位：必须是字母
                 if char_text.isalpha():
                     char_text = char_text.upper()
                 elif char_text in LETTER_MAP:
                     char_text = LETTER_MAP[char_text]
             else:
-                # 后三位：必须是数字
                 if char_text.isdigit():
                     pass
                 elif char_text in DIGIT_MAP:
@@ -185,7 +184,6 @@ def process_single_image(img_path_str: str):
         return (img_path.name, "", "ERROR", str(e), 0)
 
 def main():
-    # 检查路径是否存在
     if not IMAGE_DIR.exists():
         print(f"❌ 错误：图片目录不存在 -> {IMAGE_DIR}")
         print("   请修改脚本顶部的 IMAGE_DIR 变量为你的图片路径")

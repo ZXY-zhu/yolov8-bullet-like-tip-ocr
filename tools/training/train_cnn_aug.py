@@ -1,14 +1,12 @@
 """
-train_cnn_aug.py — 定制 CNN 字符分类器（最终版，带 Random Erase 增强）
-
+tools/training/train_cnn_aug.py
+用途：定制 CNN 字符分类器（带 Random Erase 增强）
+说明：
 - 数据集：dataset_cnn/（13 类工业刻印字符，6189 张灰度 48×48）
 - 模型：2 层 Conv + Dropout，从零训练
 - 增强：Random Erase（p=0.5，模拟脏污遮挡）
 - 最佳 Val Acc：95.23%（100 epoch）
-- 用法：python train_cnn_aug.py
-- 模型保存路径：outputs/cnn_char_classifier_best_aug.pth（运行后自动生成，需自行准备数据集）
-
-⚠️ 如需修改数据集路径，请改下方 DATASET_ROOT。
+- 运行方式：直接改下面 DATASET_ROOT，然后 python tools/training/train_cnn_aug.py
 """
 
 import torch
@@ -23,8 +21,7 @@ from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
 # ========== 1. 路径与超参数配置 ==========
-# 如需使用其他路径，修改 DATASET_ROOT 即可
-DATASET_ROOT = "dataset_cnn"
+DATASET_ROOT = "dataset_cnn"                               # 改为实际数据集目录路径
 OUTPUT_DIR = "outputs"
 BATCH_SIZE = 32
 EPOCHS = 100
@@ -35,7 +32,6 @@ VAL_RATIO = 0.2
 RANDOM_SEED = 42
 print(f"🚀 使用设备: {DEVICE}")
 
-# 确保输出目录存在
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 

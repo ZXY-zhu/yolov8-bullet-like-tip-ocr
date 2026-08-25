@@ -1,7 +1,18 @@
+"""
+tools/tests/test_single_image.py
+用途：单张图片 PaddleOCR 推理测试
+说明：
+- 用于快速验证 PaddleOCR 环境是否正常工作
+- 依赖：paddleocr, opencv-python
+- 运行方式：直接改下面图片路径，然后 python tools/tests/test_single_image.py
+"""
+
 from paddleocr import PaddleOCR
 import cv2
 
-img_path = r"C:\Users\BeLig\test.jpg"  # 换成你的一张真实图片
+# ========== 改这里 ==========
+img_path = "test.jpg"   # 改为实际测试图片路径
+# ============================
 
 # PaddleOCR 初始化
 ocr = PaddleOCR(

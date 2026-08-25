@@ -1,12 +1,24 @@
+"""
+tools/tests/crop_cnn_dataset.py
+用途：从 YOLO 格式标注中按检测框裁剪 ROI，转灰度并 padding 到正方形后 resize 为 48×48，按类别保存
+说明：
+- 输入：YOLO txt 标注 + 原始图片（.jpg）
+- 处理：裁剪 → 灰度 → padding 到正方形 → resize 48×48
+- 输出：按类别名命名的文件夹，每个文件夹内存放对应字符的 48×48 灰度 PNG
+- 类别映射：从 classes.txt 读取
+- 运行方式：直接改下面 4 个路径，然后 python tools/tests/crop_cnn_dataset.py
+"""
+
 import cv2
 import numpy as np
 import os
 
-# ========== 路径配置（使用者需根据实际数据位置修改）==========
-classes_path = r"labels_raw/classes.txt"   # 示例路径，请改为实际位置
-labels_dir = r"labels_raw"                 # 示例路径，请改为实际位置
-images_dir = r"dataset/images"             # 示例路径，请改为实际位置
-save_root = r"dataset_cnn"                 # 示例路径，请改为实际位置
+# ========== 改这里 ==========
+classes_path = "labels_raw/classes.txt"               # 改为实际 classes.txt 路径
+labels_dir = "labels_raw"                            # 改为实际标注目录路径
+images_dir = "dataset/images"                        # 改为实际图片目录路径
+save_root = "dataset_cnn"                            # 改为实际输出目录路径
+# ============================
 
 # ========== 1. 读 classes.txt ==========
 with open(classes_path, "r", encoding="utf-8") as f:

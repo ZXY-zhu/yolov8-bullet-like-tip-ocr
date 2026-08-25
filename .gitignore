@@ -8,6 +8,7 @@ learn/
 # === 2. 训练输出与大模型权重 (YOLOv8 + PaddleOCR) ===
 runs/
 tools/outputs/
+weights/
 *.pt
 *.pth
 *.onnx

@@ -1,19 +1,14 @@
 """
-train_resnet18.py — ResNet-18 迁移学习字符分类器
-
+tools/training/train_resnet18.py
+用途：ResNet-18 迁移学习字符分类器
+说明：
 - 数据集：dataset_cnn/（13 类工业刻印字符，6189 张）
 - 输入：灰度 48×48 → 转 RGB → Resize 224×224（⚠️ 存在上采样信息损失）
 - 预训练：ImageNet1K V1
 - 增强：翻转 + 旋转 + 颜色抖动 + ImageNet 归一化
 - 调度：Adam(lr=1e-4) + CosineAnnealingLR
 - 最佳 Val Acc：98.63%（Epoch 70, 100ep）
-- 用法：python train_resnet18.py
-- 模型保存路径：outputs/resnet18_char_classifier_best.pth（运行后自动生成，需自行准备数据集）
-
-⚠️ 输入 pipeline 不完善：灰度 48→224 上采样 + 单通道复制为 3 通道。
-   等原始高分辨率数据回来后需重新验证。
-
-⚠️ 如需修改数据集路径，请改下方 DATASET_ROOT。
+- 运行方式：直接改下面 DATASET_ROOT，然后 python tools/training/train_resnet18.py
 """
 
 import torch
@@ -28,8 +23,7 @@ from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
 # ========== 1. 路径与超参数 ==========
-# 如需使用其他路径，修改 DATASET_ROOT 即可
-DATASET_ROOT = "dataset_cnn"
+DATASET_ROOT = "dataset_cnn"                               # 改为实际数据集目录路径
 OUTPUT_DIR = "outputs"
 BATCH_SIZE = 32
 EPOCHS = 100
