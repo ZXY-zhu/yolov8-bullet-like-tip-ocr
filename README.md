@@ -1,5 +1,6 @@
 # YOLOv8 类子弹头状器件刻印区域检测
 
+[![Status](https://img.shields.io/badge/Status-Algorithm%20Prototype%20✅-green.svg)](https://github.com)
 [![CNN Val Acc](https://img.shields.io/badge/CNN%20Val%20Acc-95.23%25-brightgreen.svg)](https://github.com)
 [![ResNet-18 Val Acc](https://img.shields.io/badge/ResNet--18%20Val%20Acc-99.19%25-success.svg)](https://github.com)
 [![YOLOv8 mAP50-95](https://img.shields.io/badge/YOLOv8%20mAP50--95-0.921-blue.svg)](https://github.com)
