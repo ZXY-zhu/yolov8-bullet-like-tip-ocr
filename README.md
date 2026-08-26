@@ -303,6 +303,7 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 │   └── resnet18_best.pth      # ResNet-18 最佳分类权重
 ├── runs/                      # 训练输出目录（不提交）
 ├── yolov8n.pt                 # YOLOv8n 官方预训练权重（不提交，首次自动下载）
+├── LEARN.md                   # 代码学习指南（annotated 分支专属）
 └── README.md
 ```
 
