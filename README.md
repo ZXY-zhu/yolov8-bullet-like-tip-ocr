@@ -134,11 +134,11 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 **旧模型（1813 张，50 Epochs）：**
 
-![YOLOv8 旧模型训练曲线](assets/results_v1.png)
+![YOLOv8 旧模型训练曲线](https://raw.githubusercontent.com/ZXY-zhu/yolov8-bullet-like-tip-ocr/main/assets/results_v1.png)
 
 **新模型（新旧混合微调，16 Epochs early stopping）：**
 
-![YOLOv8 v2 训练曲线](assets/results_v2.png)
+![YOLOv8 v2 训练曲线](https://raw.githubusercontent.com/ZXY-zhu/yolov8-bullet-like-tip-ocr/main/assets/results_v2.png)
 
 > **注**：新模型（v2）因采用 Early Stopping（16 Epochs）且包含跨域混合数据，训练曲线初期存在一定震荡，但 mAP50-95 提升至 0.921，验证了混合数据对精度的增益。
 
