@@ -1,9 +1,9 @@
 # YOLOv8 类子弹头状器件刻印区域检测
 
-[![Status](https://img.shields.io/badge/Status-Algorithm%20Prototype%20✅-green.svg)](https://github.com)
-[![CNN Val Acc](https://img.shields.io/badge/CNN%20Val%20Acc-95.23%25-brightgreen.svg)](https://github.com)
-[![ResNet-18 Val Acc](https://img.shields.io/badge/ResNet--18%20Val%20Acc-99.19%25-success.svg)](https://github.com)
-[![YOLOv8 mAP50-95](https://img.shields.io/badge/YOLOv8%20mAP50--95-0.921-blue.svg)](https://github.com)
+[![Status](https://img.shields.io/badge/Status-Algorithm%20Prototype%20✅-green.svg)](https://github.com/ZXY-zhu/yolov8-bullet-like-tip-ocr#七当前进度说明)
+[![CNN Val Acc](https://img.shields.io/badge/CNN%20Val%20Acc-95.23%25-brightgreen.svg)](https://github.com/ZXY-zhu/yolov8-bullet-like-tip-ocr#53-定制-cnn-字符分类)
+[![ResNet-18 Val Acc](https://img.shields.io/badge/ResNet--18%20Val%20Acc-99.19%25-success.svg)](https://github.com/ZXY-zhu/yolov8-bullet-like-tip-ocr#54-resnet-18-迁移学习)
+[![YOLOv8 mAP50-95](https://img.shields.io/badge/YOLOv8%20mAP50--95-0.921-blue.svg)](https://github.com/ZXY-zhu/yolov8-bullet-like-tip-ocr#51-yolov8-检测模型)
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 [![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-red.svg)](https://docs.ultralytics.com/)
 
@@ -23,6 +23,12 @@
 - [八、后续工作](#八后续工作)
 - [九、更新日志](#九更新日志)
 - [⚠️ 关于 CPU / GPU 的说明](#️-关于-cpu--gpu-的说明)
+
+> [!TIP]
+> **📖 带详细注释的代码版本**（建设中）
+> 
+> 如果你想逐行学习每个脚本的实现细节，请切换到 [`annotated`](../../tree/annotated) 分支，
+> 每个核心 `.py` 文件都有逐行中文注释，适合入门学习。
 
 ## 一、项目背景
 
