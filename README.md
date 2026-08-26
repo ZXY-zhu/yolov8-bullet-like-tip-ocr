@@ -7,6 +7,27 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 [![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-red.svg)](https://docs.ultralytics.com/)
 
+---
+
+## 目录
+
+- [一、项目背景](#一项目背景)
+- [二、数据集说明](#二数据集说明)
+- [三、环境依赖](#三环境依赖)
+- [四、快速开始](#四快速开始)
+  - [4.0 使用预训练权重（推荐）](#40-使用预训练权重推荐最快上手)
+  - [4.1 准备数据配置](#41-准备数据配置)
+  - [4.2 训练模型](#42-训练模型)
+  - [4.3 推理测试](#43-推理测试)
+- [五、实验结果](#五实验结果)
+- [六、项目结构](#六项目结构)
+- [七、当前进度](#七当前进度说明)
+- [八、后续工作](#八后续工作)
+- [九、更新日志](#九更新日志)
+- [⚠️ 关于 CPU / GPU 的说明](#️-关于-cpu--gpu-的说明)
+
+---
+
 ## 一、项目背景
 
 在工业质检场景中，需要在金属器件尖端表面识别凹印/凸印编号。该类目标存在以下难点：
@@ -17,6 +38,8 @@
 - 图像存在倾斜、旋转与尺度变化
 
 > 注：本项目为个人验证性质，基于 1813 张旧数据 + 536 张新数据完成算法原型验证，不涉及真实产线部署。
+
+---
 
 ## 二、数据集说明
 
@@ -49,6 +72,8 @@ YOLOv8 在解析标签时，若类别 ID 无法映射到 `data.yaml` 中定义�
 - 消除因类别 ID 不一致导致的标注静默失效问题；
 - 单类别训练标签保持统一、可控。
 
+---
+
 ## 三、环境依赖
 
 安装命令：
@@ -70,7 +95,46 @@ pip install -r requirements.txt
 - scikit-learn
 - Matplotlib
 
+---
+
 ## 四、快速开始
+
+### 4.0 使用预训练权重（推荐，最快上手）
+
+#### 1. 克隆 & 安装
+
+```bash
+git clone https://github.com/ZXY-zhu/yolov8-bullet-like-tip-ocr.git
+cd yolov8-bullet-like-tip-ocr
+pip install -r requirements.txt
+```
+
+#### 2. 下载权重
+
+从 [Releases v1.0.0](https://github.com/ZXY-zhu/yolov8-bullet-like-tip-ocr/releases/tag/v1.0.0) 下载以下文件，放入 `weights/`：
+
+```bash
+mkdir -p weights
+curl -L -o weights/best.pt https://github.com/ZXY-zhu/yolov8-bullet-like-tip-ocr/releases/download/v1.0.0/best.pt
+curl -L -o weights/resnet18_best.pth https://github.com/ZXY-zhu/yolov8-bullet-like-tip-ocr/releases/download/v1.0.0/resnet18_best.pth
+```
+
+#### 3. 运行端到端推理
+
+```bash
+#单张图片
+python main.py --input path/to/image.jpg --output results/
+
+#批量推理
+python main.py --input path/to/images/ --output results/
+
+#端到端评估（需准备标注数据）
+python eval_end2end.py
+```
+
+> YOLOv8n 预训练权重首次运行时会由 Ultralytics 自动下载，无需手动准备。
+
+---
 
 ### 4.1 准备数据配置
 
@@ -98,6 +162,8 @@ names:
   0: tip_number_region
 ```
 
+---
+
 ### 4.2 训练模型
 
 #### GPU（推荐）
@@ -110,12 +176,16 @@ yolo train model=yolov8n.pt data=data.yaml epochs=50 imgsz=640 batch=8 device=0
 yolo train model=yolov8n.pt data=data.yaml epochs=5 imgsz=640 batch=2 device=cpu
 ```
 
+---
+
 ### 4.3 推理测试
 ```bash
 yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/images/val save=True
 ```
 
 > 注：`bullet_tip_v1` 为示例训练输出目录，实际使用时请根据 `runs/detect/` 下的具体文件夹名调整。
+
+---
 
 ## 五、实验结果
 
@@ -142,6 +212,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 > **注**：新模型（v2）因采用 Early Stopping（16 Epochs）且包含跨域混合数据，训练曲线初期存在一定震荡，但 mAP50-95 提升至 0.921，验证了混合数据对精度的增益。
 
+---
+
 ### 5.2 通用 PaddleOCR 基线（CAR 天花板）
 
 | 方案 | CAR | 说明 |
@@ -149,6 +221,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 | 修正后基线（带过滤） | 5.54% | 评估脚本 bug 修正后的真实值 |
 | v2 预处理全量（1813 张） | **8.54%** | CLAHE + 实心化 + 48px + 320 padding，通用 OCR 天花板 |
 | 4 位完全匹配率 | 0% | 主要错误：OCR 输出 `?`（DB 检测返回空） |
+
+---
 
 ### 5.3 定制 CNN 字符分类（旧数据 6189 张，13 类）
 
@@ -158,12 +232,16 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 | CNN Baseline 100ep | 95.23% | 98.97% | 0.4655 |
 | + Random Erase 100ep | **95.23%** | 97.92% | **0.3716** |
 
+---
+
 ### 5.4 ResNet-18 迁移学习
 
 | 版本 | 数据 | 输入 | 最佳 Val Acc | 备注 |
 |---|---|---|---|---|
 | v1 ⚠️ | 旧数据 6189 张，13 类 | 灰度 48→224 | 98.63% | 输入 pipeline 有缺陷（上采样） |
 | **v2 ✅** | **混合 8067 张，14 类** | **RGB 224×224** | **99.19%** | **补齐 6/E，SOTA** |
+
+---
 
 ### 5.5 端到端识别评估对比
 
@@ -181,6 +259,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 > 旧模型：YOLOv8 旧权重 + ResNet-18 v1，人工修正框 536 张。
 > 剩余混淆集中在 0↔1/4/C/D（形状相似，属数据物理限制）。
 
+---
+
 ### 5.6 关键对比总览
 
 | 方案 | 字符识别准确率 | 提升倍数（vs 通用 OCR） |
@@ -189,6 +269,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 | 定制 CNN（最终版） | 95.23% | **11.2×** |
 | ResNet-18 v1 ⚠️ | 98.63% | **11.5×** |
 | ResNet-18 v2 ✅ | **99.19%** | **11.6×** |
+
+---
 
 ### 5.7 预处理 A/B 测试与选型
 
@@ -199,6 +281,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - **Plan C（5×5 模糊 + 开运算 + 64px）**：CAR = 5.68%
 
 基于 A/B 测试结果，选定 **v2 管道** 进行 1813 张全量测试，最终 CAR = **8.54%**。确认此为通用 PaddleOCR 在当前数据集上的真实天花板。
+
+---
 
 ## 六、项目结构
 ```text
@@ -253,6 +337,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - `data.yaml` 仅存在于本地，由使用者根据 `data.yaml.example` 自行创建
 - 所有工具脚本中的路径已脱敏为示例相对路径，使用时改为实际路径即可
 
+---
+
 ## 七、当前进度说明
 
 ### ✅ 已完成
@@ -281,6 +367,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 
 > 说明：当前版本面向实验室验证，未覆盖真实产线环境下的长期稳定性与极端工况鲁棒性测试。
 
+---
+
 ## 八、后续工作
 
 - ~~接入 PaddleOCR 完成刻印字符端到端识别~~ ✅ 已完成（CAR 天花板 8.54%，已放弃通用方案）
@@ -293,6 +381,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - **待做**：处理超过 4 个框的器件（评估影响范围 → 决定策略）
 - **长期**：跨域泛化验证（不同材质/形状工业器件）
 
+---
+
 ## 九、更新日志
 
 ### 2026-08-25（第十天）
@@ -304,12 +394,16 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 全部脚本 Git 安全清理（17 个）：路径脱敏为示例相对路径 + 行末注释
 - 记录已知限制：部分器件刻印框数超过 4 个（待后续处理）
 
+---
+
 ### 2026-08-24（第九天）
 - 完成端到端推理脚本 `main.py`（YOLOv8 检测 + ResNet-18 识别 → 输出 LabelImg 可读 YOLO txt，自动生成 36 类 classes.txt）
 - 用 `main.py` 对 536 张新数据（同场景新器件）生成预测标签
 - 解决 LabelImg 自动覆盖 `classes.txt` 的问题（采用临时目录隔离法）
 - 完成 536 张新数据的手动修正标注
 - 更新 README：补充 `main.py` 说明、当前进度、增量训练计划
+
+---
 
 ### 2026-08-21（第八天）
 - 完成 CNN 训练脚本（50ep / 100ep / +Random Erase 增强），最佳 Val Acc **95.23%**
@@ -318,12 +412,16 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 实验记录整理至 `docs/experiment_log.md`
 - 更新 README：新增 CNN/ResNet 实验结果、项目结构、进度说明
 
+---
+
 ### 2026-08-19（第七天）
 - 完成 CNN 训练数据集制作脚本 `tools/tests/crop_cnn_dataset.py`
 - 从 `labels_raw/` 原始逐字符标注 + `classes.txt` 裁剪 6231 张 48×48 灰度字符 ROI
 - 实际覆盖 13 个类别：0(1693), 1(839), 2(139), 3(321), 4(763), 5(525), 7(255), 8(251), 9(177), B(120), C(526), D(615), E(7)
 - 确认通用 PaddleOCR 路线已放弃，CNN 分类路线数据准备完毕，明日启动训练
 - 更新 README 项目结构与进度说明
+
+---
 
 ### 2026-08-14（第六天）
 - 重构 `tools/` 目录结构：旧脚本归档至 `archive/`，核心脚本归入 `tests/`，输出统一至 `outputs/`
@@ -333,6 +431,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 所有脚本路径改为占位符，适配 Git 提交（不泄露本地路径）
 - 新增 `learn/` 代码学习模块（不提交）
 - 更新 README：全面修正实验数据（A/B 测试 + CAR 修正）、项目结构、后续计划与更新日志
+
+---
 
 ### 2026-08-13（第五天）
 - 新增 `tools/predict_batch_mp2.py`：2 进程并行批量识别脚本（Windows spawn 兼容）
@@ -344,6 +444,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 下一步：加回轮廓实心化 + ROI 尺寸归一化到 48px + Padding 到 320px 后重测
 - 更新 README 项目结构，补充 `predict_batch.py`、`predict_batch_mp2.py`、`evaluate_accuracy.py` 说明
 
+---
+
 ### 2026-08-12（第四天）
 - 为 `tools/labelsTOyolo.py` 补充注释
 - 新建 `tools/crop_roi.py`，打通 YOLOv8 + PaddleOCR 端到端推理流程
@@ -352,6 +454,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 整理脚本学习笔记至 `notes.md`（不上传 GitHub）
 
 > 说明：此前已完成模型训练与 OCR 环境验证，本次为复工后首次更新，重点为推理链路工程化与问题定位。
+
+---
 
 ### 2026-08-07（第三天）
 - 重构 `train.py`，移除过期数据清洗注释，新增 CPU 调试专用文档字符串（Docstring）
@@ -362,6 +466,8 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 明确 `data.yaml` 由使用者自行创建，`weekly_reports/` 不纳入版本管理
 
 > 说明：今日重点由功能验证转向工程规范化，涵盖脚本精简、依赖说明、文档排版与使用边界澄清。
+
+---
 
 ### 2026-08-06（第二天）
 - 明确项目为个人验证性质，暂不追求工业级鲁棒性
@@ -375,9 +481,13 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 明确后续方向：不能依赖通用 OCR 直接识别原始工业刻印图，需要 YOLO ROI 裁剪 + 图像增强/二值化/CLAHE 后再识别
 - 新增 `requirements.txt`，锁定 PaddlePaddle==3.3.1 与 PaddleOCR==3.7.0，确保环境可复现
 
+---
+
 ### 2026-08-05（第一天）
 - 完成 YOLOv8 模型训练、验证与文档初稿
 - 完成数据集划分与标注预处理脚本开发（`tools/labelsTOyolo.py`）
+
+---
 
 ## ⚠️ 关于 CPU / GPU 的说明
 
