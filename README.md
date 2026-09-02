@@ -325,6 +325,7 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 6/E 缺类解决，B→5 混淆从 44 次降至 1 次
 - 实验记录完整归档：`docs/experiment_log.md`
 - 全部工具脚本 Git 安全清理（17 个脚本，路径脱敏）
+- `main.py` 逐行注释版完成（`annotated` 分支，含 LEARN.md 学习指南）
 
 ### ⏳ 已知限制
 - 部分器件刻印框数超过 4 个，当前 pipeline 假设 4 位编号（待后续处理）
@@ -353,6 +354,10 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - **长期**：跨域泛化验证（不同材质/形状工业器件）
 
 ## 九、更新日志
+
+### 2026-09-02
+- `annotated` 分支新增 `main.py` 逐行注释版（含【数据流】【为什么】【坑】【API】标签）
+- 补充 `LEARN.md` 代码学习指南（推荐阅读顺序、注释风格、术语速查、数据流总览）
 
 ### 2026-08-25（第十天）
 - YOLOv8 新旧混合数据微调（mAP50 0.994 / mAP50-95 **0.921**，16ep early stopping）

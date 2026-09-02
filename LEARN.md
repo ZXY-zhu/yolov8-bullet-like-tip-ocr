@@ -76,8 +76,8 @@ pip install -r requirements.txt
 
 # 下载权重（见 README 4.0 节）
 
-# 然后运行 main.py
-python main.py --input path/to/image.jpg --output results/
+# 直接改 main.py 顶部 4 个路径，然后运行
+python main.py
 ```
 
 > 详细的环境配置和权重下载步骤请参考 [README](README.md)。
