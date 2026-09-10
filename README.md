@@ -10,6 +10,7 @@
 ## 目录
 
 - [一、项目背景](#一项目背景)
+  - [系统流程图](#系统流程图)
 - [二、数据集说明](#二数据集说明)
 - [三、环境依赖](#三环境依赖)
 - [四、快速开始](#四快速开始)
@@ -40,6 +41,12 @@
 - 图像存在倾斜、旋转与尺度变化
 
 > 注：本项目为个人验证性质，基于 1813 张旧数据 + 536 张新数据完成算法原型验证，不涉及真实产线部署。
+
+### 系统流程图
+
+![Pipeline](https://raw.githubusercontent.com/ZXY-zhu/yolov8-bullet-like-tip-ocr/main/assets/pipeline.png)
+
+> 端到端流程：原图 → YOLOv8 检测刻印区域 → ROI 裁剪 + Resize 224×224 → ResNet-18 分类（14类）→ 按 y 坐标排序拼接 → 输出 YOLO 格式 txt（坐标+识别结果）
 
 ## 二、数据集说明
 
@@ -354,6 +361,9 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - **长期**：跨域泛化验证（不同材质/形状工业器件）
 
 ## 九、更新日志
+
+### 2026-09-10
+- 新增系统流程图 `assets/pipeline.png`，嵌入"一、项目背景"章节
 
 ### 2026-09-07
 - `annotated` 分支新增 `detect_only.py` 逐行注释版（含【数据流】【为什么】【坑】【API】标签）
