@@ -10,6 +10,7 @@
 ## 目录
 
 - [一、项目背景](#一项目背景)
+  - [系统流程图](#系统流程图)
 - [二、数据集说明](#二数据集说明)
 - [三、环境依赖](#三环境依赖)
 - [四、快速开始](#四快速开始)
@@ -24,12 +25,6 @@
 - [九、更新日志](#九更新日志)
 - [⚠️ 关于 CPU / GPU 的说明](#️-关于-cpu--gpu-的说明)
 
-> [!TIP]
-> **📖 带详细注释的代码版本**（建设中）
-> 
-> 如果你想逐行学习每个脚本的实现细节，请切换到 [`annotated`](../../tree/annotated) 分支，
-> 每个核心 `.py` 文件都有逐行中文注释，适合入门学习。
-
 ## 一、项目背景
 
 在工业质检场景中，需要在金属器件尖端表面识别凹印/凸印编号。该类目标存在以下难点：
@@ -40,6 +35,12 @@
 - 图像存在倾斜、旋转与尺度变化
 
 > 注：本项目为个人验证性质，基于 1813 张旧数据 + 536 张新数据完成算法原型验证，不涉及真实产线部署。
+
+### 系统流程图
+
+![Pipeline](https://raw.githubusercontent.com/ZXY-zhu/yolov8-bullet-like-tip-ocr/main/assets/pipeline.png)
+
+> 端到端流程：原图 → YOLOv8 检测刻印区域 → ROI 裁剪 + Resize 224×224 → ResNet-18 分类（14类）→ 按 y 坐标排序拼接 → 输出 YOLO 格式 txt（坐标+识别结果）
 
 ## 二、数据集说明
 
@@ -303,6 +304,7 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 │   └── resnet18_best.pth      # ResNet-18 最佳分类权重
 ├── runs/                      # 训练输出目录（不提交）
 ├── yolov8n.pt                 # YOLOv8n 官方预训练权重（不提交，首次自动下载）
+├── LEARN.md                   # 代码学习指南（annotated 分支专属）
 └── README.md
 ```
 
@@ -324,6 +326,7 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - 6/E 缺类解决，B→5 混淆从 44 次降至 1 次
 - 实验记录完整归档：`docs/experiment_log.md`
 - 全部工具脚本 Git 安全清理（17 个脚本，路径脱敏）
+- 核心代码逐行注释进行中（`annotated` 分支，`main.py` ✅ `detect_only.py` ✅，含 LEARN.md 学习指南）
 
 ### ⏳ 已知限制
 - 部分器件刻印框数超过 4 个，当前 pipeline 假设 4 位编号（待后续处理）
@@ -352,6 +355,16 @@ yolo predict model=runs/detect/bullet_tip_v1/weights/best.pt source=dataset/imag
 - **长期**：跨域泛化验证（不同材质/形状工业器件）
 
 ## 九、更新日志
+
+### 2026-09-10
+- 新增系统流程图 `assets/pipeline.png`，嵌入"一、项目背景"章节
+
+### 2026-09-07
+- `annotated` 分支新增 `detect_only.py` 逐行注释版（含【数据流】【为什么】【坑】【API】标签）
+
+### 2026-09-02
+- `annotated` 分支新增 `main.py` 逐行注释版（含【数据流】【为什么】【坑】【API】标签）
+- 补充 `LEARN.md` 代码学习指南（推荐阅读顺序、注释风格、术语速查、数据流总览）
 
 ### 2026-08-25（第十天）
 - YOLOv8 新旧混合数据微调（mAP50 0.994 / mAP50-95 **0.921**，16ep early stopping）
